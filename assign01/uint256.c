@@ -31,6 +31,21 @@ UInt256 uint256_create(const uint64_t data[4]) {
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
+  char* end;
+
+  int length = 0; // length of hex string
+  while (*hex != '\0') {
+    length++;
+    hex++;
+  }
+
+  int k = 0;
+  for (int i = 0; i < 4; i++) {
+    result.data[k] = strtoul(hex - 16, &end, 16);
+    hex = hex - 16;
+   // printf("%s", end); // print out end
+  }
+  
   // TODO: implement
   return result;
 }
