@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -33,18 +34,23 @@ UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
   char* end;
 
-  int length = 0; // length of hex string
-  while (*hex != '\0') {
-    length++;
-    hex++;
+  char temp[64]; // 64 characters always
+  if (strlen(hex) < 64) {
+    size_t zeros = (strlen(hex) > 64) ? 0 : 64 - strlen(hex); // number of zeros to pad if hex is less than 64
+    memset(temp, '0', zeros); // place '0' into buffer, 'zeros' times
+    strcpy(temp + zeros, hex); // temp + zeros + hex = 64; copy over hex to correct location in temp
   }
 
-  int k = 0;
-  for (int i = 0; i < 4; i++) {
-    result.data[k] = strtoul(hex - 16, &end, 16);
-    hex = hex - 16;
-   // printf("%s", end); // print out end
+  // chunk into 4 parts, put into buffer
+  for (int i = 3; i >=0 ; i--) {
+    char buffer[17]; // array!!
+    strncpy(buffer, temp + i * 16, 16); // copy over temp, starting from right-most chunk
+    buffer[16] = '\0'; // add null term
+    
+    result.data[3-i] = strtoul(buffer, &end, 16); // convert the chunk
+    
   }
+  
   
   // TODO: implement
   return result;
@@ -70,14 +76,28 @@ uint64_t uint256_get_bits(UInt256 val, unsigned index) {
 // Compute the sum of two UInt256 values.
 UInt256 uint256_add(UInt256 left, UInt256 right) {
   UInt256 sum;
+
   // TODO: implement
+  for (int i = 0; i < 4; i++) {
+    uint64_t leftval = left.data[i];
+    uint64_t rightval = right.data[i];
+    sum.data[i] = leftval + rightval; //? why doesn't += work?
+    if (sum.data[i - 1] < left.data[i - 1]) { // check the previous column for overload
+       sum.data[i]++; // if overloaded, add 1 to current column
+    }
+  }
   return sum;
 }
 
 // Compute the difference of two UInt256 values.
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
-  // TODO: implement
+  // TODO: implement //? stored as bits?
+  for (int i = 0; i < 4; i++) {
+    // iterate through bits in the column, invert
+    right.data[i] = ~right.data[i] + 1;
+  }
+  result = uint256_add(left, right);
   return result;
 }
 
