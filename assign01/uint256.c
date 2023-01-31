@@ -57,16 +57,35 @@ UInt256 uint256_create_from_hex(const char *hex) {
 // Return a dynamically-allocated string of hex digits representing the
 // given UInt256 value.
 char *uint256_format_as_hex(UInt256 val) {
-  int sig;
-  for (int i = 0; i < 4; i++) {
+  int sig = 3; // first significant value
+  for (int i = 3; i >= 0; i--) {
     if (val.data[i] == 0UL) {
-      continue;
+      sig--;
+    } else {
+      break;
     }
   }
 
   char *hex;
-  char *temp = hex;
-  // TODO: implement
+
+  if (sig == -1) {
+    hex = malloc(2); // only stores '0' + '\n'
+    strcpy(hex, "0"); // setting memory to store the 0 string with strcpy
+    return hex;
+  }
+
+  
+  hex = malloc(16 * sig + 1); // max amount of memory possible
+  char *temp = hex; // points along the chunk of memory that hex points to
+  
+  int x = sprintf(temp, "%lx", val.data[sig]); // number of bytes at most significant place
+  temp += x;
+
+  for (int i = sig-1; i >= 0; i--) {
+    sprintf(temp, "%016lx", val.data[i]);
+    temp += 16;
+  }
+
   return hex;
 }
 
@@ -98,9 +117,20 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
 
-  for (int i = 0; i < 4; i++) {
+  int sig = 3; // first significant value
+  for (int i = 3; i >= 0; i--) {
+    if (right.data[i] == 0UL) {
+      sig--;
+    } else {
+      break;
+    }
+  }
+  for (int i = sig; i >= 0; i--) {
     // iterate through bits in the column, invert
-    right.data[i] = (~right.data[i]) + 1;
+    right.data[sig] = (~right.data[sig]);
+    if (i == 0) {
+      right.data[i]++;
+    }
   }
 
   result = uint256_add(left, right);
