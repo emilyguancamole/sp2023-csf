@@ -101,13 +101,17 @@ uint64_t uint256_get_bits(UInt256 val, unsigned index) {
 // Compute the sum of two UInt256 values.
 UInt256 uint256_add(UInt256 left, UInt256 right) {
   UInt256 sum;
-
+  int carry = 0; // use a carry that's either 1 or 0
   for (int i = 0; i < 4; i++) {
     uint64_t leftval = left.data[i];
     uint64_t rightval = right.data[i];
-    sum.data[i] = leftval + rightval; //? why doesn't += work?
-    if (sum.data[i - 1] < left.data[i - 1]) { // check the previous column for overload
-       sum.data[i]++; // if overloaded, add 1 to current column
+    sum.data[i] = leftval + rightval + carry; 
+    if (sum.data[i] < left.data[i]) { // check the previous column for overload
+      carry = 1;
+      //sum.data[i] += carry;
+      //sum.data[i]++; // if overloaded, add 1 to current column
+    } else {
+      carry = 0;
     }
   }
   return sum;
