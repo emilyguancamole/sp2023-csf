@@ -105,14 +105,16 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
   for (int i = 0; i < 4; i++) {
     uint64_t leftval = left.data[i];
     uint64_t rightval = right.data[i];
-    sum.data[i] = leftval + rightval + carry; 
-    if (sum.data[i] < left.data[i]) { // check the previous column for overload
+    
+    sum.data[i] = leftval + rightval + carry;
+    if (leftval + rightval < left.data[i] || leftval + rightval < right.data[i]) { // check overflow - check both left and right
       carry = 1;
-      //sum.data[i] += carry;
-      //sum.data[i]++; // if overloaded, add 1 to current column
-    } else {
+    } else if (sum.data[i] < left.data[i] || sum.data[i] < right.data[i]) {
+      carry = 1;
+    } else  {
       carry = 0;
     }
+
   }
   return sum;
 }
@@ -121,21 +123,11 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
 
-  int sig = 3; // first significant value
-  for (int i = 3; i >= 0; i--) {
-    if (right.data[i] == 0UL) {
-      sig--;
-    } else {
-      break;
-    }
-  }
-  for (int i = sig; i >= 0; i--) {
+  for (int i = 0; i < 4; i++) {
     // iterate through bits in the column, invert
-    right.data[sig] = (~right.data[sig]);
-    if (i == 0) {
-      right.data[i]++;
-    }
+    right.data[i] = (~right.data[i]);
   }
+  right = uint256_add(right, uint256_create_from_u64(1));
 
   result = uint256_add(left, right);
   return result;
@@ -146,4 +138,12 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product;
   // TODO: implement
   return product;
+}
+
+
+int uint256_bit_is_set(UInt256 val, unsigned index) {
+  // int idx = index / 64; // index of val
+  
+  // val.data[idx];
+  // for (int i = 0; i < idx * 64 - index; )
 }
