@@ -51,8 +51,6 @@ UInt256 uint256_create_from_hex(const char *hex) {
     
   }
   
-  
-  // TODO: implement
   return result;
 }
 
@@ -77,7 +75,6 @@ uint64_t uint256_get_bits(UInt256 val, unsigned index) {
 UInt256 uint256_add(UInt256 left, UInt256 right) {
   UInt256 sum;
 
-  // TODO: implement
   for (int i = 0; i < 4; i++) {
     uint64_t leftval = left.data[i];
     uint64_t rightval = right.data[i];
@@ -92,11 +89,12 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
 // Compute the difference of two UInt256 values.
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
-  // TODO: implement //? stored as bits?
+
   for (int i = 0; i < 4; i++) {
     // iterate through bits in the column, invert
-    right.data[i] = ~right.data[i] + 1;
+    right.data[i] = (~right.data[i]) + 1;
   }
+
   result = uint256_add(left, right);
   return result;
 }
