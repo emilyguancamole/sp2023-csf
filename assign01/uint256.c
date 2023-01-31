@@ -57,7 +57,15 @@ UInt256 uint256_create_from_hex(const char *hex) {
 // Return a dynamically-allocated string of hex digits representing the
 // given UInt256 value.
 char *uint256_format_as_hex(UInt256 val) {
-  char *hex = NULL;
+  int sig;
+  for (int i = 0; i < 4; i++) {
+    if (val.data[i] == 0UL) {
+      continue;
+    }
+  }
+
+  char *hex;
+  char *temp = hex;
   // TODO: implement
   return hex;
 }
