@@ -142,8 +142,13 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
 
 
 int uint256_bit_is_set(UInt256 val, unsigned index) {
-  // int idx = index / 64; // index of val
-  
-  // val.data[idx];
-  // for (int i = 0; i < idx * 64 - index; )
+  int idx;
+
+  if (val.data[index] & 1) {
+    idx++;
+  }
+}
+
+UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
+
 }
