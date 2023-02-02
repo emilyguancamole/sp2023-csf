@@ -181,7 +181,7 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
 
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
   uint64_t mask = 0; // mask to create buffer
-  for (int i = 0; i < shift; i++) {
+  for (int i = 0; i < (int) shift; i++) {
     mask |= (1UL << i); // shift in 'shift' number of 1s
   }
   mask = mask << (64 - shift); // move the 1-bits to the left side
