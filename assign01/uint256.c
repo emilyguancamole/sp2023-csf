@@ -167,16 +167,22 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
 
 
 int uint256_bit_is_set(UInt256 val, unsigned index) {
-  int idx = (index / 64) + 1; // index of val (the block)
+  int idx = index / 64; // index of val (the block)
   
   // val.data[idx]; // the number in the block
-  uint64_t n = index % (64 * idx); // index within the block
+  uint64_t n; // index within the block
+  if (idx != 0) {
+    n = index % (64 * idx); // remainder
+  } else {
+    n = index; // in the 0th block
+  }
+  
   uint64_t mask = 1UL << n; //2^(n+1) - 2^n; // only a 1 at position n
 
   if (val.data[idx] & mask) {
-    return 0; // true, there's a 1 at position n
+    return 1; // true, there's a 1 at position n 
   }
-  return -1; // false
+  return 0; // false
 }
 
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
