@@ -135,20 +135,57 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 
 // Compute the product of two UInt256 values.
 UInt256 uint256_mul(UInt256 left, UInt256 right) {
-  UInt256 product;
+  UInt256 product; // initialize to 000000
+
   // TODO: implement
+  int totShifts = 0;
+  for (int i = 0; i < 4; i++) {
+    uint64_t val = left.data[i]; // current block
+
+    // // figure out total number of shifts
+    // for (int j = 0; j < 64; j++) { 
+    //   if (uint256_bit_is_set(val, j)) {
+    //     totShifts += j;
+    //     // add product + uint256_leftshift(right, j);
+    //   }
+    // }
+  }
+
+
+  for (int i = 0; i < 256; i++) {
+    // if uint256_bit_is_set(left, i);
+    // call shift function: uint256_leftshift(right, i);
+    // add to result
+  }
+
   return product;
 }
 
 
 int uint256_bit_is_set(UInt256 val, unsigned index) {
-  int idx;
+  int idx = index / 64; // index of val (the block)
+  
+  // val.data[idx]; // the number in the block
+  int n = index % (64 * idx); // index within the block
+  uint64_t mask = 1 << n; //2^(n+1) - 2^n; // only a 1 at position n
 
-  if (val.data[index] & 1) {
-    idx++;
+  if (val.data[idx] & mask) {
+    return 0; // true, there's a 1 at position n
   }
+  return -1; // false
 }
 
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
 
+
+
+  int overflow = 0;
+  if (shift < 65) {
+    // overflow = shift# of bits from the left
+    overflow = 
+    val.data[0] = val.data[0] >> shift; // right shift??
+    
+  } else if (shift >= 64 && shift < 129) {
+    overflow = shift - 64;
+  }
 }
