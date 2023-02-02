@@ -135,21 +135,9 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 
 // Compute the product of two UInt256 values.
 UInt256 uint256_mul(UInt256 left, UInt256 right) {
-  UInt256 product; // initialize to 000000
+  UInt256 product = uint256_create_from_u64(0); // initialize to 000000
 
   // TODO: implement
-  // int totShifts = 0;
-  // for (int i = 0; i < 4; i++) {
-  //   uint64_t val = left.data[i]; // current block
-
-    // // figure out total number of shifts
-    // for (int j = 0; j < 64; j++) { 
-    //   if (uint256_bit_is_set(val, j)) {
-    //     totShifts += j;
-    //     // add product + uint256_leftshift(right, j);
-    //   }
-    // }
-  // }
 
   UInt256 shifted;
 
