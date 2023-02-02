@@ -151,10 +151,12 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
     // }
   // }
 
+  UInt256 shifted;
 
   for (int i = 0; i < 256; i++) {
     if (uint256_bit_is_set(left, i)) {
-      uint256_leftshift(right, i);
+      shifted = uint256_leftshift(right, i);
+      product = uint256_add(product, shifted);
     }
     // call shift function: uint256_leftshift(right, i);
     // add to result
@@ -210,4 +212,5 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
   buf2 = val.data[3] & mask; // 4th chunk overflow; discarded
   val.data[3] = val.data[3] << shift;
 
+  return val;
 }
