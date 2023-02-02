@@ -35,6 +35,9 @@ void test_sub_2(TestObjs *objs);
 void test_sub_3(TestObjs *objs);
 void test_mul_1(TestObjs *objs);
 void test_mul_2(TestObjs *objs);
+void test_mul_3(TestObjs *objs); // our own
+void test_mul_4(TestObjs *objs);
+void test_mul_5(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -56,6 +59,9 @@ int main(int argc, char **argv) {
   TEST(test_sub_3);
   TEST(test_mul_1);
   TEST(test_mul_2);
+  TEST(test_mul_3);
+  TEST(test_mul_4);
+  TEST(test_mul_5);
 
   TEST_FINI();
 }
@@ -307,4 +313,66 @@ void test_mul_2(TestObjs *objs) {
   ASSERT(0xe6117fa57cddf52eUL == result.data[1]);
   ASSERT(0x61abad710163aa9bUL == result.data[2]);
   ASSERT(0x991f2125eacd3UL == result.data[3]);
+}
+
+void test_mul_3(TestObjs *objs) {
+  (void) objs;
+
+  UInt256 left, right, result;
+
+  // 2 * 1 = 2
+  left.data[0] = 0x2UL; //0x0000000000000002UL;
+  left.data[1] = 0x0UL;
+  left.data[2] = 0x0UL;
+  left.data[3] = 0x0UL;
+  //right is objs->one
+  result = uint256_mul(left, objs->one);
+  ASSERT(2UL == result.data[0]);
+  ASSERT(0UL == result.data[1]);
+  ASSERT(0UL == result.data[2]);
+  ASSERT(0UL == result.data[3]);
+}
+
+void test_mul_4(TestObjs *objs) {
+  (void) objs;
+
+  UInt256 left, right, result;
+
+  // 5 * 2 = 10
+  left.data[0] = 0x5UL;
+  left.data[1] = 0x0UL;
+  left.data[2] = 0x0UL;
+  left.data[3] = 0x0UL;
+  right.data[0] = 0x2UL;
+  right.data[1] = 0x0UL;
+  right.data[2] = 0x0UL;
+  right.data[3] = 0x0UL;
+  result = uint256_mul(left, right);
+  ASSERT(10UL == result.data[0]);
+  ASSERT(0UL == result.data[1]);
+  ASSERT(0UL == result.data[2]);
+  ASSERT(0UL == result.data[3]);
+}
+
+
+void test_mul_5(TestObjs *objs) {
+  (void) objs;
+
+  UInt256 left, right, result;
+
+  // 2 * 297453748188566519810
+  // 0x0000000000000010UL2000000000000002UL
+  left.data[0] = 0x2UL;
+  left.data[1] = 0x0UL;
+  left.data[2] = 0x0UL;
+  left.data[3] = 0x0UL;
+  right.data[0] = 0x2000000000000002UL;
+  right.data[1] = 0x0000000000000010UL;
+  right.data[2] = 0x0UL;
+  right.data[3] = 0x0UL;
+  result = uint256_mul(left, right);
+  ASSERT(0x4000000000000004UL == result.data[0]);
+  ASSERT(0x20UL == result.data[1]);
+  ASSERT(0UL == result.data[2]);
+  ASSERT(0UL == result.data[3]);
 }
