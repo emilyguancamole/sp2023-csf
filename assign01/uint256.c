@@ -167,7 +167,7 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
 
 
 int uint256_bit_is_set(UInt256 val, unsigned index) {
-  int idx = index / 64; // index of val (the block)
+  int idx = (index / 64) + 1; // index of val (the block)
   
   // val.data[idx]; // the number in the block
   uint64_t n = index % (64 * idx); // index within the block
