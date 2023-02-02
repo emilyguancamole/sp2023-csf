@@ -138,9 +138,9 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product; // initialize to 000000
 
   // TODO: implement
-  int totShifts = 0;
-  for (int i = 0; i < 4; i++) {
-    uint64_t val = left.data[i]; // current block
+  // int totShifts = 0;
+  // for (int i = 0; i < 4; i++) {
+  //   uint64_t val = left.data[i]; // current block
 
     // // figure out total number of shifts
     // for (int j = 0; j < 64; j++) { 
@@ -149,11 +149,13 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
     //     // add product + uint256_leftshift(right, j);
     //   }
     // }
-  }
+  // }
 
 
   for (int i = 0; i < 256; i++) {
-    // if uint256_bit_is_set(left, i);
+    if (uint256_bit_is_set(left, i)) {
+      uint256_leftshift(right, i);
+    }
     // call shift function: uint256_leftshift(right, i);
     // add to result
   }
@@ -166,8 +168,8 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
   int idx = index / 64; // index of val (the block)
   
   // val.data[idx]; // the number in the block
-  int n = index % (64 * idx); // index within the block
-  uint64_t mask = 1 << n; //2^(n+1) - 2^n; // only a 1 at position n
+  uint64_t n = index % (64 * idx); // index within the block
+  uint64_t mask = 1UL << n; //2^(n+1) - 2^n; // only a 1 at position n
 
   if (val.data[idx] & mask) {
     return 0; // true, there's a 1 at position n
@@ -176,16 +178,36 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
 }
 
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
-
-
-
-  int overflow = 0;
-  if (shift < 65) {
-    // overflow = shift# of bits from the left
-    overflow = 
-    val.data[0] = val.data[0] >> shift; // right shift??
-    
-  } else if (shift >= 64 && shift < 129) {
-    overflow = shift - 64;
+  uint64_t mask = 0; // mask to create buffer
+  for (int i = 0; i < shift; i++) {
+    mask |= (1UL << i); // shift in 'shift' number of 1s
   }
+  mask = mask << (64 - shift); // move the 1-bits to the left side
+
+  uint64_t buf1 = val.data[0] & mask; // first chunk overflow
+  buf1 = buf1 >> (64 - shift); // shift buf1 all the way right
+
+  val.data[0] = val.data[0] << shift; // shift the actual chunk0
+
+  // shift chunk 2 to make space
+  uint64_t buf2 = val.data[1] & mask; 
+  buf2 = buf2 >> (64 - shift); // shift buf2 back
+  val.data[1] = val.data[1] << shift;
+
+  // insert buf1 to chunk 2
+  val.data[1] = val.data[1] | buf1;
+  // done with buf1
+
+  buf1 = val.data[2] & mask; // 3rd chunk overflow
+  buf1 = buf1 >> (64 - shift); // shift buf1 back
+  val.data[2] = val.data[2] << shift;
+
+  // insert buf2 to chunk 3
+  val.data[2] = val.data[2] | buf2;
+
+  // insert buf1 into chunk 4
+  val.data[3] = val.data[3] | buf1;
+  buf2 = val.data[3] & mask; // 4th chunk overflow; discarded
+  val.data[3] = val.data[3] << shift;
+
 }

@@ -46,5 +46,8 @@ UInt256 uint256_sub(UInt256 left, UInt256 right);
 UInt256 uint256_mul(UInt256 left, UInt256 right);
 
 // You may add additional functions if you would like to
+int uint256_bit_is_set(UInt256 val, unsigned index);
+
+UInt256 uint256_leftshift(UInt256 val, unsigned shift)
 
 #endif // UINT256_H
