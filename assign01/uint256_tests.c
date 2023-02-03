@@ -42,6 +42,7 @@ void test_mul_6(TestObjs *objs);
 void test_add_zero(TestObjs *objs);
 void test_sub_zero(TestObjs *objs);
 void test_add_max(TestObjs *objs);
+void test_sub_max(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
   TEST(test_add_zero);
   TEST(test_sub_zero);
   TEST(test_add_max);
+  TEST(test_sub_max);
 
   TEST_FINI();
 }
@@ -336,6 +338,17 @@ void test_sub_zero(TestObjs *objs) {
   ASSERT(0xcc07a1509f4ebb33UL == result.data[2]);
   ASSERT(0x5034f5d413945ac7UL == result.data[1]);
   ASSERT(0xd0bdb42962a6ae8cUL == result.data[0]);
+}
+
+void test_sub_max(TestObjs *objs) {
+  // subtracting a value (1) from 0
+  UInt256 result;
+  result = uint256_sub(objs->zero, objs->one);
+
+  ASSERT(~0UL == result.data[3]);
+  ASSERT(~0UL == result.data[2]);
+  ASSERT(~0UL == result.data[1]);
+  ASSERT(~0UL == result.data[0]);
 }
 
 void test_mul_1(TestObjs *objs) {
