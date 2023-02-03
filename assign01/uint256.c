@@ -138,12 +138,12 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product = uint256_create_from_u64(0); // initialize to 000000
 
   UInt256 shifted;
-  int numShifts = 0; //!
+  //int numShifts = 0; //!
   for (int i = 0; i < 256; i++) {
     if (uint256_bit_is_set(left, i)) {
       shifted = uint256_leftshift(right, i);
       product = uint256_add(product, shifted);
-      numShifts++;
+      //numShifts++;
     }
     // call shift function: uint256_leftshift(right, i);
     // add to result
@@ -173,40 +173,78 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
 }
 
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
-  uint64_t mask = 0; // mask to create buffer
-  if (shift != 0) {
-    for (int i = 0; i <= (int) shift; i++) {
-    mask |= (1UL << i); // shift in 'shift' number of 1s //! start iwth 00000 and shift IN 1's. enter the loop correct # times without messing up if there are 0 shifts
+  uint64_t mask = 0UL; // mask to create buffer
+  uint64_t val0 = val.data[0];
+  uint64_t val1 = val.data[1];
+  uint64_t val2 = val.data[2];
+  uint64_t val3 = val.data[3];
+
+  int whole = shift / 64;
+
+  if (whole > 0) {
+    if (whole == 1) {
+      val.data[0] = 0;
+      val.data[1] = val0;
+      val.data[2] = val1;
+      val.data[3] = val2;
+    } else if (whole == 2) {
+      val.data[0] = 0;
+      val.data[1] = 0;
+      val.data[2] = val0;
+      val.data[3] = val1;
+    } else if (whole == 3) {
+      val.data[0] = 0;
+      val.data[1] = 0;
+      val.data[2] = 0;
+      val.data[3] = val0;
+    } else {
+      val.data[0] = 0;
+      val.data[1] = 0;
+      val.data[2] = 0;
+      val.data[3] = 0;
     }
   }
-  
-  mask = mask << (64 - shift); // move the 1-bits to the left side
 
-  uint64_t buf1 = val.data[0] & mask; // first chunk overflow
-  buf1 = buf1 >> (64 - shift); // shift buf1 all the way right
+  int partial = shift % 64;
 
-  val.data[0] = val.data[0] << shift; // shift the actual chunk0
+  if (shift == 0 || partial == 0) {
+    return val;
+  }
 
-  // shift chunk 2 to make space
-  uint64_t buf2 = val.data[1] & mask; 
-  buf2 = buf2 >> (64 - shift); // shift buf2 back
-  val.data[1] = val.data[1] << shift;
+  if (partial < 64) {
+    for (int i = 0; i < (int) shift; i++) {
+      mask |= (1UL << i); // shift in 'shift' number of 1s //! start iwth 00000 and shift IN 1's. enter the loop correct # times without messing up if there are 0 shifts
+    }
 
-  // insert buf1 to chunk 2
-  val.data[1] = val.data[1] | buf1;
-  // done with buf1
+    mask = mask << (64 - partial); // move the 1-bits to the left side
 
-  buf1 = val.data[2] & mask; // 3rd chunk overflow
-  buf1 = buf1 >> (64 - shift); // shift buf1 back
-  val.data[2] = val.data[2] << shift;
+    uint64_t buf1 = val.data[0] & mask; // first chunk overflow
+    buf1 = buf1 >> (64 - partial); // shift buf1 all the way right
 
-  // insert buf2 to chunk 3
-  val.data[2] = val.data[2] | buf2;
+    val.data[0] = val.data[0] << partial; // shift the actual chunk0
 
-  // insert buf1 into chunk 4
-  val.data[3] = val.data[3] | buf1;
-  buf2 = val.data[3] & mask; // 4th chunk overflow; discarded
-  val.data[3] = val.data[3] << shift;
+    // shift chunk 2 to make space
+    uint64_t buf2 = val.data[1] & mask; 
+    buf2 = buf2 >> (64 - partial); // shift buf2 back
+    val.data[1] = val.data[1] << partial;
+
+    // insert buf1 to chunk 2
+    val.data[1] = val.data[1] | buf1;
+    // done with buf1
+
+    buf1 = val.data[2] & mask; // 3rd chunk overflow
+    buf1 = buf1 >> (64 - partial); // shift buf1 back
+    val.data[2] = val.data[2] << partial;
+
+    // insert buf2 to chunk 3
+    val.data[2] = val.data[2] | buf2;
+
+    // insert buf1 into chunk 4
+    val.data[3] = val.data[3] | buf1;
+    buf2 = val.data[3] & mask; // 4th chunk overflow; discarded
+    val.data[3] = val.data[3] << partial;
+    
+  }
 
   return val;
 }
