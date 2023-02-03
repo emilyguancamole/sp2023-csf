@@ -174,9 +174,9 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
 
 UInt256 uint256_wholeshift(UInt256 val, unsigned whole) {
   
-  if (0 < whole <= 4) {
+  if (0 < whole || whole <= 4) {
     for (int i = 3; i >= 0; i--) {
-      if (i >= whole) {
+      if (i >= (int)whole) {
         val.data[i] = val.data[i - whole];
       } else {
         val.data[i] = 0;
@@ -203,35 +203,30 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
 
   if (partial < 64) {
     for (int i = 0; i < (int) shift; i++) {
-      mask |= (1UL << i); // shift in 'shift' number of 1s //! start iwth 00000 and shift IN 1's. enter the loop correct # times without messing up if there are 0 shifts
+      mask |= (1UL << i); // shift in 'shift' number of 1s
     }
 
     mask = mask << (64 - partial); // move the 1-bits to the left side
 
-    uint64_t buf1 = val.data[0] & mask; // first chunk overflow
+    uint64_t buf1 = val.data[0] & mask; // chunk0 overflow
     buf1 = buf1 >> (64 - partial); // shift buf1 all the way right
-
     val.data[0] = val.data[0] << partial; // shift the actual chunk0
 
-    // shift chunk 2 to make space
-    uint64_t buf2 = val.data[1] & mask; 
+    uint64_t buf2 = val.data[1] & mask; // chunk1 overflow
     buf2 = buf2 >> (64 - partial); // shift buf2 back
-    val.data[1] = val.data[1] << partial;
+    val.data[1] = val.data[1] << partial; // shift chunk1
 
-    // insert buf1 to chunk 2
-    val.data[1] = val.data[1] | buf1;
-    // done with buf1
+    val.data[1] = val.data[1] | buf1; // insert buf1 to chunk1
 
-    uint64_t buf3 = val.data[2] & mask; // 3rd chunk overflow
+    uint64_t buf3 = val.data[2] & mask; // chunk2 overflow
     buf3 = buf3 >> (64 - partial); // shift buf1 back
     val.data[2] = val.data[2] << partial;
 
-    // insert buf2 to chunk 3
-    val.data[2] = val.data[2] | buf2;
-
-    // insert buf1 into chunk 4
-    val.data[3] = val.data[3] << partial;
-    val.data[3] = val.data[3] | buf3;
+    
+    val.data[2] = val.data[2] | buf2; // insert buf2 to chunk 3
+    
+    val.data[3] = val.data[3] << partial; // shift last chunk
+    val.data[3] = val.data[3] | buf3; // insert buf1 into chunk3
 
   } else if (partial >= 64) {
     val = uint256_create_from_u64(0);
