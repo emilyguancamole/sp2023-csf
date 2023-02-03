@@ -198,10 +198,7 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
       val.data[2] = 0;
       val.data[3] = val0;
     } else {
-      val.data[0] = 0;
-      val.data[1] = 0;
-      val.data[2] = 0;
-      val.data[3] = 0;
+      val = uint256_create_from_u64(0);
     }
   }
 
@@ -232,18 +229,19 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
     val.data[1] = val.data[1] | buf1;
     // done with buf1
 
-    buf1 = val.data[2] & mask; // 3rd chunk overflow
-    buf1 = buf1 >> (64 - partial); // shift buf1 back
+    uint64_t buf3 = val.data[2] & mask; // 3rd chunk overflow
+    buf3 = buf3 >> (64 - partial); // shift buf1 back
     val.data[2] = val.data[2] << partial;
 
     // insert buf2 to chunk 3
     val.data[2] = val.data[2] | buf2;
 
     // insert buf1 into chunk 4
-    val.data[3] = val.data[3] | buf1;
-    buf2 = val.data[3] & mask; // 4th chunk overflow; discarded
     val.data[3] = val.data[3] << partial;
-    
+    val.data[3] = val.data[3] | buf3;
+
+  } else if (partial >= 64) {
+    val = uint256_create_from_u64(0);
   }
 
   return val;
