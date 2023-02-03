@@ -39,6 +39,9 @@ void test_mul_3(TestObjs *objs); // our own
 void test_mul_4(TestObjs *objs);
 void test_mul_5(TestObjs *objs);
 void test_mul_6(TestObjs *objs);
+void test_add_zero(TestObjs *objs);
+void test_sub_zero(TestObjs *objs);
+void test_add_max(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -64,6 +67,9 @@ int main(int argc, char **argv) {
   TEST(test_mul_4);
   TEST(test_mul_5);
   TEST(test_mul_6);
+  TEST(test_add_zero);
+  TEST(test_sub_zero);
+  TEST(test_add_max);
 
   TEST_FINI();
 }
@@ -226,6 +232,37 @@ void test_add_3(TestObjs *objs) {
   ASSERT(0xac5151273cfcf2eUL == result.data[3]);
 }
 
+void test_add_zero(TestObjs *objs) {
+  UInt256 sum, left;
+  // add 0 to a value
+  left.data[0] = 0x190bc8c2ceb84cebUL;
+  left.data[1] = 0xff1076115dab87f8UL;
+  left.data[2] = 0x79e0c122009e87b1UL;
+  left.data[3] = 0x9515af0631ecc47UL;
+
+  sum = uint256_add(left, objs->zero);
+
+  ASSERT(0x9515af0631ecc47UL == sum.data[3]);
+  ASSERT(0x79e0c122009e87b1UL == sum.data[2]);
+  ASSERT(0xff1076115dab87f8UL == sum.data[1]);
+  ASSERT(0x190bc8c2ceb84cebUL == sum.data[0]);
+}
+
+void test_add_max(TestObjs *objs) {
+  // overflow addition
+
+  UInt256 max;
+  for (int i = 0; i < 4; ++i) { max.data[i] = ~(0UL); }
+
+  UInt256 sum = uint256_add(max, objs->one);
+
+  // these assertions should succeed
+  ASSERT(sum.data[3] == 0UL);
+  ASSERT(sum.data[2] == 0UL);
+  ASSERT(sum.data[1] == 0UL);
+  ASSERT(sum.data[0] == 0UL);
+}
+
 void test_sub_1(TestObjs *objs) {
   // basic subtraction tests
 
@@ -284,6 +321,23 @@ void test_sub_3(TestObjs *objs) {
   ASSERT(0x4a4b72ebb654226UL == result.data[3]);
 }
 
+void test_sub_zero(TestObjs *objs) {
+  // subtract 0 from a value
+
+  UInt256 result, left;
+
+  left.data[0] = 0xd0bdb42962a6ae8cUL;
+  left.data[1] = 0x5034f5d413945ac7UL;
+  left.data[2] = 0xcc07a1509f4ebb33UL;
+  left.data[3] = 0xbc556287a225313UL;
+
+  result = uint256_sub(left, objs->zero);
+  ASSERT(0xbc556287a225313UL == result.data[3]);
+  ASSERT(0xcc07a1509f4ebb33UL == result.data[2]);
+  ASSERT(0x5034f5d413945ac7UL == result.data[1]);
+  ASSERT(0xd0bdb42962a6ae8cUL == result.data[0]);
+}
+
 void test_mul_1(TestObjs *objs) {
   // basic multiplication tests
 
@@ -320,7 +374,7 @@ void test_mul_2(TestObjs *objs) {
 void test_mul_3(TestObjs *objs) {
   (void) objs;
 
-  UInt256 left, right, result;
+  UInt256 left, result;
 
   // 2 * 1 = 2
   left.data[0] = 0x2UL; //0x0000000000000002UL;
@@ -379,13 +433,12 @@ void test_mul_5(TestObjs *objs) {
   ASSERT(0UL == result.data[3]);
 }
 
-void test_mul_6(TestObjs *objs) {
+void test_mul_6(TestObjs *objs) { //?
   (void) objs;
 
   UInt256 left, right, result;
 
   // 2 * 297453748188566519810
-  // 0x0000000000000010UL2000000000000002UL
   left.data[0] = 0x6UL;
   left.data[1] = 0x0UL;
   left.data[2] = 0x0UL;
@@ -395,4 +448,5 @@ void test_mul_6(TestObjs *objs) {
   right.data[2] = 0x0UL;
   right.data[3] = 0x0UL;
   result = uint256_mul(left, right);
+
 }

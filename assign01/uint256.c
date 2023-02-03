@@ -138,15 +138,11 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product = uint256_create_from_u64(0); // initialize to 000000
 
   UInt256 shifted;
-  //int numShifts = 0; //!
   for (int i = 0; i < 256; i++) {
     if (uint256_bit_is_set(left, i)) {
-      shifted = uint256_leftshift(right, i);
-      product = uint256_add(product, shifted);
-      //numShifts++;
+      shifted = uint256_leftshift(right, i); // conduct shift
+      product = uint256_add(product, shifted); // add to result
     }
-    // call shift function: uint256_leftshift(right, i);
-    // add to result
   }
 
   return product;
@@ -201,7 +197,7 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
     return val;
   }
 
-  if (partial < 64) {
+  if (partial < 64) { //? why do we need this?
     for (int i = 0; i < (int) shift; i++) {
       mask |= (1UL << i); // shift in 'shift' number of 1s
     }
@@ -221,7 +217,6 @@ UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
     uint64_t buf3 = val.data[2] & mask; // chunk2 overflow
     buf3 = buf3 >> (64 - partial); // shift buf1 back
     val.data[2] = val.data[2] << partial;
-
     
     val.data[2] = val.data[2] | buf2; // insert buf2 to chunk 3
     
