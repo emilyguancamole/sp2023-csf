@@ -172,35 +172,28 @@ int uint256_bit_is_set(UInt256 val, unsigned index) {
   return 0; // false
 }
 
+UInt256 uint256_wholeshift(UInt256 val, unsigned whole) {
+  
+  if (0 < whole <= 4) {
+    for (int i = 3; i >= 0; i--) {
+      if (i >= whole) {
+        val.data[i] = val.data[i - whole];
+      } else {
+        val.data[i] = 0;
+      }
+    } 
+  } else {
+    val = uint256_create_from_u64(0);
+  }
+
+  return val;
+}
+
 UInt256 uint256_leftshift(UInt256 val, unsigned shift) {
   uint64_t mask = 0UL; // mask to create buffer
-  uint64_t val0 = val.data[0];
-  uint64_t val1 = val.data[1];
-  uint64_t val2 = val.data[2];
-  uint64_t val3 = val.data[3];
 
   int whole = shift / 64;
-
-  if (whole > 0) {
-    if (whole == 1) {
-      val.data[0] = 0;
-      val.data[1] = val0;
-      val.data[2] = val1;
-      val.data[3] = val2;
-    } else if (whole == 2) {
-      val.data[0] = 0;
-      val.data[1] = 0;
-      val.data[2] = val0;
-      val.data[3] = val1;
-    } else if (whole == 3) {
-      val.data[0] = 0;
-      val.data[1] = 0;
-      val.data[2] = 0;
-      val.data[3] = val0;
-    } else {
-      val = uint256_create_from_u64(0);
-    }
-  }
+  val = uint256_wholeshift(val, whole);
 
   int partial = shift % 64;
 

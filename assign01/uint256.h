@@ -45,6 +45,8 @@ UInt256 uint256_sub(UInt256 left, UInt256 right);
 // Compute the product of two UInt256 values.
 UInt256 uint256_mul(UInt256 left, UInt256 right);
 
+UInt256 uint256_wholeshift(UInt256 val, unsigned whole);
+
 // You may add additional functions if you would like to
 int uint256_bit_is_set(UInt256 val, unsigned index);
 
