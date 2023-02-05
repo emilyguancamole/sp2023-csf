@@ -43,6 +43,7 @@ void test_add_zero(TestObjs *objs);
 void test_sub_zero(TestObjs *objs);
 void test_add_max(TestObjs *objs);
 void test_sub_max(TestObjs *objs);
+void test_mul_max(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
