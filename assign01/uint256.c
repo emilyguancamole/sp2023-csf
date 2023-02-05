@@ -75,17 +75,15 @@ char *uint256_format_as_hex(UInt256 val) {
   }
 
   
-  hex = malloc(16 * sig + 1); // max amount of memory possible
+  hex = malloc(16 * (sig+1) + 1); // max amount of memory possible
   char *temp = hex; // points along the chunk of memory that hex points to
   
   int x = sprintf(temp, "%lx", val.data[sig]); // number of bytes at most significant place
   temp += x;
-
-  for (int i = sig-1; i >= 0; i--) {
+  for (int i = sig-1; i >= 0; i--) { // start from second most significant place
     sprintf(temp, "%016lx", val.data[i]);
     temp += 16;
   }
-
   return hex;
 }
 
@@ -138,10 +136,12 @@ UInt256 uint256_mul(UInt256 left, UInt256 right) {
   UInt256 product = uint256_create_from_u64(0); // initialize to 000000
 
   UInt256 shifted;
+  int numShift = 0;
   for (int i = 0; i < 256; i++) {
     if (uint256_bit_is_set(left, i)) {
       shifted = uint256_leftshift(right, i); // conduct shift
       product = uint256_add(product, shifted); // add to result
+      numShift++;
     }
   }
 

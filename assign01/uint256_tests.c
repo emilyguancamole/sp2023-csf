@@ -37,13 +37,17 @@ void test_mul_1(TestObjs *objs);
 void test_mul_2(TestObjs *objs);
 void test_mul_3(TestObjs *objs); // our own
 void test_mul_4(TestObjs *objs);
-void test_mul_5(TestObjs *objs);
+void test_mul_5();
 void test_mul_6(TestObjs *objs);
 void test_add_zero(TestObjs *objs);
 void test_sub_zero(TestObjs *objs);
 void test_add_max(TestObjs *objs);
 void test_sub_max(TestObjs *objs);
 void test_mul_max(TestObjs *objs);
+void test_format_as_hex_2();
+void test_format_as_hex_3();
+void test_create_from_hex_2(TestObjs *objs);
+void test_mul_zero(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -73,6 +77,10 @@ int main(int argc, char **argv) {
   TEST(test_sub_zero);
   TEST(test_add_max);
   TEST(test_sub_max);
+  TEST(test_format_as_hex_2);
+  TEST(test_format_as_hex_3);
+  TEST(test_create_from_hex_2);
+  TEST(test_mul_zero);
 
   TEST_FINI();
 }
@@ -164,6 +172,20 @@ void test_create_from_hex(TestObjs *objs) {
   ASSERT(check(val, 0x0UL, 0x0UL, 0x0UL, 0xcafeUL));
 }
 
+void test_create_from_hex_2(TestObjs *objs) {
+  // testing converting a large hex number
+
+  (void) *objs;
+  UInt256 val;
+  char* hex = "c29dec441723e3588d62d6a01b867278817c2bb56c6adc8e51424c4b53aaf";
+
+  val = uint256_create_from_hex(hex);
+  ASSERT(0xc8e51424c4b53aafUL == val.data[0]);
+  ASSERT(0x278817c2bb56c6adUL == val.data[1]);
+  ASSERT(0x3588d62d6a01b867UL == val.data[2]);
+  ASSERT(0xc29deC441723eUL == val.data[3]);
+}
+
 void test_format_as_hex(TestObjs *objs) {
   char *s;
 
@@ -173,6 +195,47 @@ void test_format_as_hex(TestObjs *objs) {
 
   s = uint256_format_as_hex(objs->one);
   ASSERT(0 == strcmp("1", s));
+  free(s);
+}
+
+void test_format_as_hex_2() { 
+  // medium numbers
+  char *s;
+  UInt256 num;
+
+  // num.data[0] = 0x4cb6c96c4810cb5eUL;
+  // num.data[1] = 0xa932467b27ccb2bUL;
+  num.data[0] = 12UL;
+  num.data[1] = 0U;
+  num.data[2] = 0U;
+  num.data[3] = 0U;
+
+  s = uint256_format_as_hex(num);
+  ASSERT(0 == strcmp("c", s));
+  free(s);
+}
+
+void test_format_as_hex_3() {
+  // larger numbers
+  char *s;
+  UInt256 num;
+
+  num.data[0] = 0x4cb6c96c4810cb5eUL;
+  num.data[1] = 0xa932467b27ccb2bUL;
+  num.data[2] = 0U;
+  num.data[3] = 0U;
+
+  s = uint256_format_as_hex(num);
+  ASSERT(0 == strcmp("a932467b27ccb2b4cb6c96c4810cb5e", s));
+  free(s);
+
+  num.data[0] = 0x190bc8c2ceb84cebUL;
+  num.data[1] = 0xff1076115dab87f8UL;
+  num.data[2] = 0x79e0c122009e87b1UL;
+  num.data[3] = 0x9515af0631ecc47UL;
+
+  s = uint256_format_as_hex(num);
+  ASSERT(0 == strcmp("9515af0631ecc4779e0c122009e87b1ff1076115dab87f8190bc8c2ceb84ceb", s));
   free(s);
 }
 
@@ -342,7 +405,7 @@ void test_sub_zero(TestObjs *objs) {
 }
 
 void test_sub_max(TestObjs *objs) {
-  // subtracting a value (1) from 0
+  // subtracting a value (1) from 0 -> negative overflow
   UInt256 result;
   result = uint256_sub(objs->zero, objs->one);
 
@@ -425,9 +488,7 @@ void test_mul_4(TestObjs *objs) {
 }
 
 
-void test_mul_5(TestObjs *objs) {
-  (void) objs;
-
+void test_mul_5() {
   UInt256 left, right, result;
 
   // 2 * 297453748188566519810
@@ -447,20 +508,32 @@ void test_mul_5(TestObjs *objs) {
   ASSERT(0UL == result.data[3]);
 }
 
-void test_mul_6(TestObjs *objs) { //?
+void test_mul_6(TestObjs *objs) {
   (void) objs;
 
   UInt256 left, right, result;
 
-  // 2 * 297453748188566519810
-  left.data[0] = 0x6UL;
-  left.data[1] = 0x0UL;
+  // 961544ae8be2abc63f63766d1291781 * 14bf658bd8053a9484c32d955aeea2f = 991f2125eacd361abad710163aa9be6117fa57cddf52e73c97a28d7f744de
+  left.data[0] = 0x63f63766d1291781UL;
+  left.data[1] = 0x961544ae8be2abcUL;
   left.data[2] = 0x0UL;
   left.data[3] = 0x0UL;
-  right.data[0] = 0x2000000000000002UL;
-  right.data[1] = 0x0000000000000010UL;
+  right.data[0] = 0x484c32d955aeea2fUL;
+  right.data[1] = 0x14bf658bd8053a9UL;
   right.data[2] = 0x0UL;
   right.data[3] = 0x0UL;
   result = uint256_mul(left, right);
+  ASSERT(0xc8e51424c4b53aafUL == result.data[0]);
+  ASSERT(0x278817c2bb56c6adUL == result.data[1]);
+  ASSERT(0x3588d62d6a01b867UL == result.data[2]);
+  ASSERT(0xc29deC441723eUL == result.data[3]);
+}
 
+void test_mul_zero(TestObjs *objs) {
+  // multiply by 0 on the left side -> product is never changed
+
+  UInt256 result;
+
+  result = uint256_mul(objs->zero, objs->one);
+  ASSERT(check(result, 0UL, 0UL, 0UL, 0UL));
 }
