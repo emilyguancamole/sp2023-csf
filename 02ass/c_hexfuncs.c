@@ -9,12 +9,21 @@
 // Returns the number of characters read.
 unsigned hex_read(char data_buf[]) {
     // TODO
-    return 0UL;
+    // 0 is stdin. or do STDIN_FILENO
+    unsigned char_read = 0;
+    while (read(0, data_buf, 1) == 1) {
+        char_read++;
+    }
+    return char_read;
 }
 
 // Write given nul-terminated string to standard output.
 void hex_write_string(const char s[]) {
     // TODO
+    while (*s != '\0') { //? check end of string
+        write(1, s, 1); // write 1 char to stdout
+    } 
+    
 }
 
 // Format an unsigned value as an offset string consisting of exactly 8
