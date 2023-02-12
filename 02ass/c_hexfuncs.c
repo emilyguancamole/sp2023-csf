@@ -32,7 +32,7 @@ void hex_format_offset(unsigned offset, char sbuf[]) {
         sbuf[i] = 0;
     }
 
-    sbuf[8] = '\0';
+    sbuf[8] = '\0'; // null terminate the string
     int i = 7;
     while (i >= 0) {
         int n = offset & 0b1111; // 4 bits per digit
@@ -73,7 +73,7 @@ void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
 // ASCII code for '.' should be returned.
 char hex_to_printable(unsigned char byteval) { // ? base?
     // TODO
-    if (byteval > 32 && byteval < 127) {
+    if (byteval >= 32 && byteval < 127) {
         return byteval;
     } else {
         return '.';
