@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 void testFormatOffset(TestObjs *objs) {
   (void) objs; // suppress warning about unused parameter
   char buf[16];
-  hex_format_offset(0x00000001u, buf);
+  hex_format_offset(0x00000001u, buf); // how are these params passed into hex funcs?? automat rsi? stack?
   ASSERT(0 == strcmp(buf, "00000001"));
 
   hex_format_offset(0xabcd1234u, buf);

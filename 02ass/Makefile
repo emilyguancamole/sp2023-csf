@@ -11,7 +11,7 @@ ASM_SRCS = asm_hexfuncs.S asm_hexmain.S
 ASMFLAGS = -g -no-pie
 
 LDFLAGS = -no-pie
-
+ 
 %.o : %.c
 	gcc $(CFLAGS) -c $<
 
