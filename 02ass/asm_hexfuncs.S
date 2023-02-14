@@ -35,33 +35,44 @@
 	hex_format_offset:
 		/* TODO */
 		movl $0, %r10d /* move 0 into r10d, which is index of array*/
-		movl $8, %r9 /*number of elements- store elsewhere like r9. if wanted to save, use caller saved (vals will stay the same across function calls*/ 
+		movl $8, %esi /* number of elements- store elsewhere like r9. if wanted to save, use caller saved (vals will stay the same across function calls */ 
 
-	.LarrayInitLoop: /*initializing array of 8 char to 0s*/
-		cmpl %esi, %r10d
+	.LarrayInitLoop: /* initializing array of 8 char to 0s */
+		cmpl %esi, %r10d /* compare number of elements and index */
 		jae .LloopDone /*if r10d >= esi, done with loop*/
 		movb $0, (%rsi, %r10, 1)  /*move 0 into current array index*/
 		incl %r10d /*increment array index*/
 		jmp .LarrayInitLoop
 		
 	.LloopDone:
-		movq $7, %rsi /*move int i = 7 into rsi*/
-		movl $0, %esi /*esi is while loop counter - */
-		
+		movl $7, %r10d /* move int i = 7 into %r10d -> reset the array index */
+		movl $0, %esi /* reset %esi as the while loop counter */
 		jmp .LcheckCond
-/*rdi is 1st parameter*/
+
 	.Ltop:
-	/*move offset to another var*/
-		andl $0xF, %rdi  /*?? bitwise and: 1111 & offset (stored where??), andb may also work*/
-		/*compare result with 10, change result accordingly*/
-		cmpl 
-		/*decrement r10d=*/
+		movb %rdi, %r9d  /* store offset in temporary vairable %r9d */
+		andl $0xF, %r9d  /* bitwise and: 1111 & offset and store in %r9d, andb may also work*/
+		cmpl $10, %r9d /* Compare result with 10 */
+		jl .Lnumber /* Conditional jump if r9d < 10 */
+		addl $87, %r9d /* Else, add 87 to the result */
+		jmp .LaddResult
+
 	.LcheckCond:
-		cmp %rsi, esi
-		jle .Ltop /* while (esi <= rsi), continue loop*/
+		cmp %r10d, esi
+		jle .Ltop /* while (esi <= r10d), continue loop*/
+		jmp .LfinalResult
 
-		
+	.Lnumber:
+		addl $48, %r9d /* add 48 to result */
+		jmp .LaddResult
+	
+	.LaddResult:
+		movb %r9d, (%rsi, %r10, 1)
+		decl %r10d
+		sarq $4, %rdi
+		jmp .LcheckCond
 
+	.LfinalResult:
 		ret
 
 		.globl hex_format_byte_as_hex
