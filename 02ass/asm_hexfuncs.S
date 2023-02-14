@@ -29,58 +29,50 @@
 		ret
 
 
-
 		.globl hex_format_offset
-
-	hex_format_offset:
-		/* TODO */
-		movl $0, %r10d /* move 0 into r10d, which is index of array*/
-		movl $8, %esi /* number of elements- store elsewhere like r9. if wanted to save, use caller saved (vals will stay the same across function calls */ 
-
-	.LarrayInitLoop: /* initializing array of 8 char to 0s */
-		cmpl %esi, %r10d /* compare number of elements and index */
-		jae .LloopDone /*if r10d >= esi, done with loop*/
-		movb $0, (%rsi, %r10, 1)  /*move 0 into current array index*/
-		incl %r10d /*increment array index*/
-		jmp .LarrayInitLoop
-		
-	.LloopDone:
-		movl $7, %r10d /* move int i = 7 into %r10d -> reset the array index */
-		movl $0, %esi /* reset %esi as the while loop counter */
-		jmp .LcheckCond
-
-	.Ltop:
-		movb %rdi, %r9d  /* store offset in temporary vairable %r9d */
-		andl $0xF, %r9d  /* bitwise and: 1111 & offset and store in %r9d, andb may also work*/
-		cmpl $10, %r9d /* Compare result with 10 */
-		jl .Lnumber /* Conditional jump if r9d < 10 */
-		addl $87, %r9d /* Else, add 87 to the result */
-		jmp .LaddResult
-
-	.LcheckCond:
-		cmp %r10d, esi
-		jle .Ltop /* while (esi <= r10d), continue loop*/
-		jmp .LfinalResult
-
-	.Lnumber:
-		addl $48, %r9d /* add 48 to result */
-		jmp .LaddResult
-	
-	.LaddResult:
-		movb %r9d, (%rsi, %r10, 1)
-		decl %r10d
-		sarq $4, %rdi
-		jmp .LcheckCond
-
-	.LfinalResult:
+		/*rsi is char[] */
+	hex_format_offset: 
 		ret
+
+
 
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
 		/* TODO */
+		movl $2, %r10d /*index of array*/
+		movb $0, (%rsi, %r10, 1) /* move null term into LAST element (index 2) of character array rsi*/
+	/*?? why does 0 null term vs 0 int??*/
+	/*?? why movb - would movl work*/
+		decl %r10d /*decrement index of array / loop counter */
+		
+	.LcompareByte:
+		movb %dil, %r9b /* 4 bits of rdi ????? is that what its doing bc both dil and rdi have 72*/
+		/*compare, store in rsi*/
+		cmpl $10, %r9d /* Compare result with 10 */
+		jl .LhexNumber /* Conditional jump if r9d < 10 */
+		addl $87, %r9d /* Else, add 87 to the result */
+		jmp .LformatDigit
+	
+	.LhexNumber:
+		addl $48, %r9d /* add 48 to result */
+		jmp .LformatDigit
+	
+	.LformatDigit:
+		movb %r9b, (%rsi, %r10, 1) /*add result to place in array*/
+		decl %r10d /*decrement index of array / loop counter */
+		
+		
+		cmpl $0, %r10d /* check if we should continue*/
+		jle .LformatFinal /*reached the 0th element of char array, so done formatting*/
+		sarq $4, %rdi /*shift argument right 4 bits*/
+		jmp .LcompareByte /*keep going to compare next 4 bits*/
+
+		movb %dil, %r9b /*next 4 bits*/
+
+	.LformatFinal:
 		ret
 
-	.globl hex_read
+		.globl hex_read
 	hex_read:
 		/* TODO */
 		ret
