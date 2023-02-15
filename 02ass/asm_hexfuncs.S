@@ -28,13 +28,9 @@
 		/*addq $8, %rsp*/
 		ret
 
-
 		.globl hex_format_offset
-		/*rsi is char[] */
 	hex_format_offset: 
 		ret
-
-
 
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
@@ -48,13 +44,13 @@
 	.LcompareByte:
 		movb %dil, %r9b /* 4 bits of rdi ????? is that what its doing bc both dil and rdi have 72*/
 		/*compare, store in rsi*/
-		cmpl $10, %r9d /* Compare result with 10 */
+		cmpb $10, %r9b /* Compare result with 10 */
 		jl .LhexNumber /* Conditional jump if r9d < 10 */
-		addl $87, %r9d /* Else, add 87 to the result */
+		addb $87, %r9b /* Else, add 87 to the result */
 		jmp .LformatDigit
 	
 	.LhexNumber:
-		addl $48, %r9d /* add 48 to result */
+		addb $48, %r9b /* add 48 to result */
 		jmp .LformatDigit
 	
 	.LformatDigit:
@@ -63,11 +59,9 @@
 		
 		
 		cmpl $0, %r10d /* check if we should continue*/
-		jle .LformatFinal /*reached the 0th element of char array, so done formatting*/
+		jl .LformatFinal /*reached the 0th element of char array, so done formatting*/
 		sarq $4, %rdi /*shift argument right 4 bits*/
 		jmp .LcompareByte /*keep going to compare next 4 bits*/
-
-		movb %dil, %r9b /*next 4 bits*/
 
 	.LformatFinal:
 		ret
@@ -77,7 +71,7 @@
 		/* TODO */
 		ret
 
-	.globl hex_write_string
+		.globl hex_write_string
 	hex_write_string:
 		/* TODO */
 		ret
