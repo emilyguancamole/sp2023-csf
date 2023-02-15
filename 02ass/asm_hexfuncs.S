@@ -12,7 +12,7 @@
 		/* byteval stored in rdi*/
 		/*subq $8, %rsp ?? do we still need this??*/
 
-		cmpq $32, %rdi /*?? why is it q 8 bytes - thought hex was 4 bytes?? can you explain bits and bytes pls*/
+		cmpb $32, %dil /* changed to dil and b*/
 		jl .LnotPrintable /*conditional jump if rdi < 32*/
 		cmpq $127, %rdi
 		jge .LnotPrintable /*conditional jump if rdi >= 127*/
@@ -35,18 +35,24 @@
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
 		/* TODO */
-		movl $2, %r10d /*index of array*/
-		movb $0, (%rsi, %r10, 1) /* move null term into LAST element (index 2) of character array rsi*/
+		movl $1, %r10d /*index of array*/
+		/*movb $0, (%rsi, %r10, 1) /* move null term into LAST element (index 2) of character array rsi*/
 	/*?? why does 0 null term vs 0 int??*/
 	/*?? why movb - would movl work*/
-		decl %r10d /*decrement index of array / loop counter */
+		/*decl %r10d /*decrement index of array / loop counter */
 		
-	.LcompareByte:
+	.LcompareLoop:
+		cmpl $0, %r10d 	/* check if we should continue*/
+		jl .LformatFinal
+
 		movb %dil, %r9b /* 4 bits of rdi ????? is that what its doing bc both dil and rdi have 72*/
 		/*compare, store in rsi*/
-		cmpb $10, %r9b /* Compare result with 10 */
-		jl .LhexNumber /* Conditional jump if r9d < 10 */
-		addb $87, %r9b /* Else, add 87 to the result */
+		andb $0b1111, %r9b
+
+		cmpb $10, %r9b 	/* Compare result with 10 */
+		jl .LhexNumber 	/* Conditional jump if r9d < 10 */
+
+		addb $87, %r9b 	/* Else, add 87 to the result */
 		jmp .LformatDigit
 	
 	.LhexNumber:
@@ -54,17 +60,15 @@
 		jmp .LformatDigit
 	
 	.LformatDigit:
-		movb %r9b, (%rsi, %r10, 1) /*add result to place in array*/
-		decl %r10d /*decrement index of array / loop counter */
-		
-		
-		cmpl $0, %r10d /* check if we should continue*/
-		jl .LformatFinal /*reached the 0th element of char array, so done formatting*/
-		sarq $4, %rdi /*shift argument right 4 bits*/
-		jmp .LcompareByte /*keep going to compare next 4 bits*/
+		movb %r9b, (%rsi, %r10, 1) 	/*add result to place in array*/
+		shrb $4, %dil 				/*shift argument right 4 bits ??why shift dil (4 bits)? can you do shrq with rdi??*/ 
+		decl %r10d					/*decrement index of array / loop counter */
+				
+		jmp .LcompareLoop /*keep going to compare next 4 bits*/
 
 	.LformatFinal:
 		ret
+		
 
 		.globl hex_read
 	hex_read:
