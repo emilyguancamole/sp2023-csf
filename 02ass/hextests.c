@@ -28,6 +28,7 @@ void cleanup(TestObjs *objs) {
 void testFormatOffset(TestObjs *objs);
 void testFormatByteAsHex(TestObjs *objs);
 void testHexToPrintable(TestObjs *objs);
+void testFormatOffset2(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -40,6 +41,8 @@ int main(int argc, char **argv) {
   TEST(testFormatByteAsHex);
   TEST(testHexToPrintable);
 
+  TEST(testFormatOffset2); // our tests begin here
+
   TEST_FINI();
 
   return 0;
@@ -50,6 +53,16 @@ void testFormatOffset(TestObjs *objs) {
   char buf[16];
   hex_format_offset(0x00000001u, buf); // how are these params passed into hex funcs?? automat rsi? stack?
   ASSERT(0 == strcmp(buf, "00000001"));
+
+  hex_format_offset(0xabcd1234u, buf);
+  ASSERT(0 == strcmp(buf, "abcd1234"));
+}
+
+void testFormatOffset2(TestObjs *objs) {
+  (void) objs; // suppress warning about unused parameter
+  char buf[16];
+  hex_format_offset(0x00200011u, buf); // how are these params passed into hex funcs?? automat rsi? stack?
+  ASSERT(0 == strcmp(buf, "00200011"));
 
   hex_format_offset(0xabcd1234u, buf);
   ASSERT(0 == strcmp(buf, "abcd1234"));
