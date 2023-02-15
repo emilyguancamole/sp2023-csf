@@ -32,36 +32,36 @@
 
 		.globl hex_format_offset
 	hex_format_offset: 
-		movl $0, %r10d 			/* move 0 into r10d, index of array*/
-
-	.LarrayInitLoop: 			/* initializing array of 8 char to 0s */
-        cmpl $7, %r10d 			/* compare number of elements and index r10d */
-        jg .LloopHexFormat 			/*if r10 > 7, done with loop*/
-        movb $0, (%rsi, %r10, 1)  /*move 0 char into current array index ?? r9?*/ 
-        incl %r10d 				/*increment array index*/
-        jmp .LarrayInitLoop
+	    movl $8, %r10d 			/* compare array index r10d to 8 -> need 9 spaces with null terminator */
+	    movb $0, (%rsi, %r10, 1)  /* move 0 into array to initialize array with enough space */ 
+        decl %r10d 				/*increment array index*/
         
     .LloopHexFormat:
-		movb $0, (%rsi, %r10, 1) /* move null terminator into last element of array (should be idx 8*/
-
-
 		cmpl $0, %r10d 			/* check if we should continue*/
-		jl .LformatFinal		/* if r10d < 0, done with formatting loop */
+		jl .LloopFinal		/* if r10d < 0, done with formatting loop */
 
 		movb %dil, %r9b 		/* store 4 bits of rdi */
 		andb $0b1111, %r9b		/* bitwise and with the 4 bits */
 
 		cmpb $10, %r9b 			/* Compare result with 10 */
-		jl .LhexNumber 			/* Conditional jump if r9d < 10 */
+		jl .LhexFormatNum 			/* Conditional jump if r9d < 10 */
 
 		addb $87, %r9b 			/* Else, add 87 to the result */
+		jmp .LhexFormatDigit
+
+	.LhexFormatNum:
+		addb $48, %r9b /* add 48 to result */
 		jmp .LformatDigit
 	
-        jmp .LcheckCond
+	.LhexFormatDigit:
+		movb %r9b, (%rsi, %r10, 1) 	/*add result to place in array*/
+		sarb $4, %dil 				/*shift argument right 4 bits ??why shift dil (4 bits)? can you do shrq with rdi??*/ 
+		decl %r10d					/*decrement index of array / loop counter */
+		
+		jmp .LloopHexFormat
 
+	.LloopFinal:
 		ret
-
-
 
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
