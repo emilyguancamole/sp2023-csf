@@ -1,5 +1,6 @@
 // C implementation of hexdump functions
 
+#include <stdio.h>
 #include <unistd.h>  // this is the only system header file you may include!
 #include "hexfuncs.h"
 
@@ -10,15 +11,18 @@
 unsigned hex_read(char data_buf[]) {
     // 0 is stdin
     int char_read = 0;
-    char_read = read(0, data_buf, 16);
+    char_read = read(STDIN_FILENO, data_buf, 16); //STDIN_FIlEIO
     
     return char_read;
 }
 
 // Write given nul-terminated string to standard output.
 void hex_write_string(const char s[]) {
+    //int n = 0;
     while (*s != '\0') {
         write(1, s, 1); 
+        s++;
+        //n++;
     } 
     
 }

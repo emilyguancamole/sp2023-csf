@@ -40,8 +40,10 @@
 		cmpl $0, %r10d 			/* check if we should continue*/
 		jl .LloopFinal			/* if r10d < 0, done with formatting loop */
 
-		movb %dil, %r9b 		/* store 4 bits of rdi */
-		andb $0b1111, %r9b		/* bitwise and with the 4 bits */
+		; movb %dil, %r9b 		/* store 4 bits of rdi */
+		; andb $0b1111, %r9b		/* bitwise and with the 4 bits */
+		movb $0b1111, %r9b
+		andb %dil, %r9b
 
 		cmpb $10, %r9b 			/* Compare result with 10 */
 		jl .LhexFormatNum 		/* Conditional jump if r9d < 10 */
