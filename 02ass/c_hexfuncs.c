@@ -9,20 +9,17 @@
 // Read up to 16 bytes from standard input into data_buf.
 // Returns the number of characters read.
 unsigned hex_read(char data_buf[]) {
-    // 0 is stdin
     int char_read = 0;
-    char_read = read(STDIN_FILENO, data_buf, 16); //STDIN_FIlEIO
+    char_read = read(STDIN_FILENO, data_buf, 16); //STDIN_FIlEIO = 0
     
     return char_read;
 }
 
 // Write given nul-terminated string to standard output.
 void hex_write_string(const char s[]) {
-    //int n = 0;
     while (*s != '\0') {
         write(1, s, 1); 
-        s++;
-        //n++;
+        s++; // increment the pointer to move along the char array
     } 
     
 }
@@ -36,10 +33,10 @@ void hex_format_offset(unsigned offset, char sbuf[]) {
         sbuf[i] = 0;
     }
 
-    sbuf[8] = '\0'; // null terminate the string
+    sbuf[8] = '\0'; // null terminate the end of char array (string)
     int i = 7;
     while (i >= 0) {
-        int n = offset & 0b1111; // 4 bits per digit
+        int n = offset & 0b1111; // bitmask 4 last bits of the offset
         
         if (n < 10) {
             n += 48; // numbers
@@ -47,7 +44,7 @@ void hex_format_offset(unsigned offset, char sbuf[]) {
             n += 87; // letters, starting from a
         }
         sbuf[i] = n; 
-        offset = offset >> 4; // shift by 4 bits to get next digit
+        offset = offset >> 4; // shift by 4 bits to get next 4 bits
         i--;
     }
 }
@@ -75,8 +72,8 @@ void hex_format_byte_as_hex(unsigned char byteval, char sbuf[]) {
 // value.  If byteval is already a printable character, it is returned
 // unmodified.  If byteval is not a printable character, then the
 // ASCII code for '.' should be returned.
-char hex_to_printable(unsigned char byteval) { // ? base?
-    // TODO
+char hex_to_printable(unsigned char byteval) {
+    // check if the byteval ascii value is within the range we want to print (letters and alphabets)
     if (byteval >= 32 && byteval < 127) {
         return byteval;
     } else {
