@@ -1,3 +1,5 @@
+/* Esther Kwon (kkwon16@jhu.edu) and Emily Guan (eguan2@jhu.edu) */
+
 /* Assembly language implementation of hexdump functions */
 
 	.section .rodata
