@@ -11,7 +11,7 @@
 // Returns the number of characters read.
 unsigned hex_read(char data_buf[]) {
     int char_read = 0;
-    char_read = read(STDIN_FILENO, data_buf, 16); //STDIN_FIlEIO = 0
+    char_read = read(0, data_buf, 16); //STDIN_FIlEIO = 0
     
     return char_read;
 }

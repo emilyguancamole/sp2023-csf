@@ -105,17 +105,43 @@
 
 		.globl hex_read
 	hex_read:
-		movl $0, %r10d
-		call read
+		movq $0, %rax 	/* tell sys we want to syscall read */
+
+		movq %rdi, %r8 	/* move rdi into new register because rdi=data_buf at first. saving it so r8 = data_buf*/
+		movq $0, %rdi 	/* stdin, so rdi can be passed into read */
+
+		movq %r8, %rsi 	/* 2nd param of read is in rsi?*/
+		
+		movq $16, %rdx 	/* 3rd param of read. read up to 16 bytes*/
+
+		syscall /*calling read */
 
 		ret
 
 		.globl hex_write_string
 	hex_write_string:
 		/* TODO */
+		movq $1, %rax 	/* tell sys we want to syscall write */
+/* jmp LgetStrLen to find string legnth of s (in rdi at first) */
+/********/
+		movq %rdi, %r8 	/* move rdi into new register because rdi=s at first. saving it so r8=s*/
+		movq $0, %rdi 	/* stdin, so rdi can be passed into read */
+
+		movq %r8, %rsi /* 2nd param of read is s buffer to write to */
+		
+		movq $1, %rdx /* 3rd param of read. read up to 16 bytes*/
+
+		syscall /*calling read */
+
 		ret
 
+	.LgetStrLen: /* find length of nul-term string s */
+		movl $0, %r10d /* store length of string */
+		cmpb $0, %rdi /* compare with null terminator */
+		/*je. wait how to jump back to /********/
+
 	
+/*rax should be $0
 
 /* vim:ft=gas:
  */
