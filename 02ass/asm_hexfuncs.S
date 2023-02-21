@@ -105,7 +105,9 @@
 
 		.globl hex_read
 	hex_read:
-		/* TODO */
+		movl $0, %r10d
+		call read
+
 		ret
 
 		.globl hex_write_string
