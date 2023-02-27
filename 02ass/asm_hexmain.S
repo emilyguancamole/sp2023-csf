@@ -10,7 +10,7 @@
 	offset: .space 9
 	sbuf: .space 17
 	hexbuf: .space 3
-	printableWords: .space 17
+	printableWords: .space 18
 	
 	.section .text
 
@@ -57,7 +57,7 @@ main:
 .LformatAsHexCont:
 	cmpq %r14, %rbx /* compare n (number of chars read) with loop counter */
 	jge .LfillSpace 
-
+	
 	movb (%r12, %rbx, 1), %dil /* get sbuf[i] */
 	movq $hexbuf, %rsi 
 	
@@ -101,13 +101,17 @@ main:
 	call hex_write_string
 	*/
 
-	movb %al, (%r15, %rbx, 1) /* store the char to printableWords[i]*/
+	movb %al, (%r12, %rbx, 1) /* store the char to printableWords[i]*/
 	inc %rbx /* increment loop counter */
 	jmp .LstoreWords /* jump back to top */
 
 .LprintWords:
 /* delete next 2 lines if tyring to print one char at a time*/
-	movq %r15, %rdi /* move the printableWords array into %rdi */
+	
+	/*movb $10, (%r15, %rbx, 1) /* newline*/
+	movb $0, (%r12, %rbx, 1) /*move nul term*/
+	movq %r12, %rdi /* move the printableWords array into %rdi */
+
 	call hex_write_string /* print out the printableWords array */
 
 	movq $sNewline, %rdi
