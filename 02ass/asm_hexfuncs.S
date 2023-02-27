@@ -65,9 +65,6 @@
 	.LloopFinal:
 		ret
 
-
-
-
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
 		movl $2, %r10d 				/* move 2 into %r10d as index of array */
@@ -101,8 +98,6 @@
 	.LformatFinal:
 		ret		/* return the byte as hex */
 		
-
-
 		.globl hex_read
 	hex_read:
 		subq $8, %rsp
@@ -138,7 +133,7 @@
 		movq $1, %rdx /* 3rd param of read. read up to 16 bytes*/
 
 		syscall /*calling read */
-		incl %r12
+		incq %r12
 
 	.LcompareChar: /* find length of nul-term string s */
 		cmpb $0, (%r12) /* compare current char with null terminator. null term is b type. memory location is the same*/
