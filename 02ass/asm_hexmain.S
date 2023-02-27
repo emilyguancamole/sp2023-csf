@@ -17,18 +17,20 @@
 	.globl main
 	
 main:
-	subq $8, %rsp
+	/*subq $8, %rsp*/
 
 	pushq %rbp
 	movq %rsp, %rbp
-	subq $32, %rsp
+	/*subq $32, %rsp*/
 
 	pushq %r12 /* push %r12 onto the stack (store sbuf) */
 	pushq %r13 /* push %r13 onto the stack (store position) */
 	pushq %r14 /* push %r14 onto the stack (store character read n) */
 	pushq %r15 /* push %r15 onto stack (store printableWords array) */
+	pushq %rbx /* callee-saved loop counter */
+	subq $8, %rsp /*again? */
 
-	movq $0, %r13 /* move the position number into %r11 */
+	movq $0, %r13 /* move position number into %r13 */
 
 	movq $sbuf, %r12 /* move memory address of sbuf array into %r12 on stack */
 	movq %r12, %rdi /* move %r12 = sbuf into %rdi as a parameter for hex_read */
@@ -40,7 +42,7 @@ main:
 	cmpq $0, %r14 /* compare 0 with the number of chars read from hex_read (stored in %r14) */
 	je .Ldone /* if %r14 == 0, Loop is done */
 
-	movq %r13, %rdi /* move the sbuf into %rdi */
+	movq %r13, %rdi /* move position into %rdi */
 	movq $offset, %rsi /* move offset into %rsi */
 	call hex_format_offset /* set offset */
 
@@ -50,15 +52,14 @@ main:
 	call hex_write_string /* print colon */
 
 .LformatAsHexStart:
-	movq $0, %r10 /* initialize loop counter */
+	movq $0, %rbx /* initialize loop counter */
 
 .LformatAsHexCont:
-	cmpq %r14, %r10 /* compare n (number of chars read) with loop counter */
+	cmpq %r14, %rbx /* compare n (number of chars read) with loop counter */
 	jge .LfillSpace 
 
-	movq (%r12, %r10, 1), %rdi /* get sbuf[i] */
+	movb (%r12, %rbx, 1), %dil /* get sbuf[i] */
 	movq $hexbuf, %rsi 
-	pushq %r10/* preserve value of loop counter */
 	
 	call hex_format_byte_as_hex
 	movq $hexbuf, %rdi /* move changed hexbuf into %rdi */
@@ -66,40 +67,44 @@ main:
 	movq $sSpace, %rdi
 	call hex_write_string /* print space */
 	
-	popq %r10 
 
-	incq %r10 /* inc loop counter */
+	incq %rbx /* inc loop counter */
 	jmp .LformatAsHexCont
 
+	movq %r14, %rbx /* initialize loop counter */
+
 .LfillSpace:
-	movq %r14, %r10 /* initialize loop counter */
-	cmpq $16, %r10 /* compare loop counter with 16 */
-	jge .LprintWords /* %r10 >= 16, break out of loop */
+	cmpq $16, %rbx /* compare loop counter with 16 */
+	jge .LstoreWords /* %rbx >= 16, break out of loop */
 
 	movq $sLongSpace, %rdi /* move "   into %rdi */
 	call hex_write_string /* print the space to fill in */
 
-	incq %r10 /* increment loop counter */
+	incq %rbx /* increment loop counter */
 	jmp .LfillSpace /* jump back to top */
 
 	movq $sSpace, %rdi 
 	call hex_write_string /* print out " " */
 
-	movq $0, %r10 /* reset loop counter to 0 for next part */
+	movq $0, %rbx /* reset loop counter to 0 for next part */
 
 .LstoreWords:
-	cmpq %r14, %r10 /* compare loop counter with n */
+	cmpq %r14, %rbx /* compare loop counter with n */
 	jge .LprintWords /* if >=n, break out */
 
-	movq (%r12, %r10, 1), %rdi /* get sbuf[i] */
+	movb (%r12, %rbx, 1), %dil /* get sbuf[i] */
 	call hex_to_printable /* check if char at buf[i] is printable */
-	movq %rax, (%r15, %r10, 1) /* store the char to printableWords[i] */
-	inc %r10 /* increment loop counter */
+	movb %al, %dil
+	call hex_write_string
+
+	;movb %al, (%r15, %rbx, 1) /* store the char to printableWords[i] */
+	inc %rbx /* increment loop counter */
 	jmp .LstoreWords /* jump back to top */
 
 .LprintWords:
-	movq $printableWords, %rdi /* move the printableWords array into %rdi */
-	call hex_write_string /* print out the printableWords array */
+	;movq %r15, %rdi /* move the printableWords array into %rdi */
+	;call hex_write_string /* print out the printableWords array */
+
 	movq $sNewline, %rdi
 	call hex_write_string /* print out newline */
 
@@ -110,12 +115,16 @@ main:
 	jmp .Ltop /* jump all the way back to the top */
 
 .Ldone:
+	addq $8, %rsp
+
+	popq %rbx
 	popq %r15 /* pop all the callee-saved registers */
 	popq %r14
 	popq %r13
 	popq %r12
+	popq %rbp
 
-	addq $8, %rsp
+	
 	ret
 
 /* vim:ft=gas:

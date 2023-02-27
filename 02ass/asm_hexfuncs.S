@@ -11,6 +11,7 @@
 
 		.globl hex_to_printable
 	hex_to_printable:
+		subq $8, %rsp
 		/* byteval stored in rdi*/
 
 		cmpb $32, %dil 		/* compare 32 and dil (4 bits...?) as bindary */
@@ -26,12 +27,14 @@
 		jmp .LprintByte		/* jump to return the value */
 	
 	.LprintByte: /* 32<=rdi<127, so print whatever is stored in rdi */
+		addq $8, %rsp
 		ret /* return %rax */
 
 
 
 		.globl hex_format_offset
 	hex_format_offset: 
+		subq $8, %rsp
 	    movl $8, %r10d 			/* set array index r10d = 8 -> need 9 spaces with null terminator */
 	    movb $0, (%rsi, %r10, 1)  /* move null term into last elem of array */ 
         decl %r10d 				/* decrement array index to 7 */
@@ -40,8 +43,6 @@
 		cmpl $0, %r10d 			/* check if we should continue (index >= 0) */
 		jl .LloopFinal			/* if r10d < 0, done with formatting loop */
 
-		; movb %dil, %r9b 		/* store 4 bits of rdi */
-		; andb $0b1111, %r9b		/* bitwise and with the 4 bits */
 		movb $0b1111, %r9b
 		andb %dil, %r9b
 
@@ -63,10 +64,12 @@
 		jmp .LloopHexFormat  		/* jump to top of loop */
 
 	.LloopFinal:
+		addq $8, %rsp
 		ret
 
 		.globl hex_format_byte_as_hex
 	hex_format_byte_as_hex:
+		subq $8, %rsp
 		movl $2, %r10d 				/* move 2 into %r10d as index of array */
 		movb $0, (%rsi, %r10, 1) 	/* move null terminator into LAST element (index 2) of char array rsi*/
 		decl %r10d 				/* decrement index of array / loop counter */
@@ -96,6 +99,7 @@
 		jmp .LcompareLoop 			/* keep going to compare next 4 bits */
 
 	.LformatFinal:
+		addq $8, %rsp
 		ret		/* return the byte as hex */
 		
 		.globl hex_read
@@ -112,7 +116,7 @@
 		movq $16, %rdx 	/* 3rd param of read. read up to 16 bytes*/
 
 		syscall /*calling read */
-		
+		/*call read*/
 		addq $8, %rsp
 
 		ret
@@ -120,13 +124,14 @@
 		.globl hex_write_string
 	hex_write_string:
 		/* TODO */
-		pushq %r12
+		subq $8, %rsp
+		pushq %r12 /* r12 stores pointer along s[] */
 		movq %rdi, %r12 	/* move rdi into new register because rdi=s at first. saving it so r12=s*/
 		jmp .LcompareChar /* compare the string first in case empy */
 
 	.LwriteString:
-		movq $1, %rax 
-		movq $0, %rdi 	/* stdin, so rdi can be passed into read */
+		movq $1, %rax  /* tell sys we want to syscall write */
+		movq $1, %rdi 	/* write to stdout */
 
 		movq %r12, %rsi /* 2nd param of read is s buffer. continuously update rsi (array w/ prev vals) to have new vals from r12 */
 		
@@ -140,6 +145,7 @@
 		jne .LwriteString
 
 		popq %r12
+		addq $8, %rsp
 		ret
 	
 
