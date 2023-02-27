@@ -3,6 +3,7 @@
 	.section .rodata
 	sColon: .string ": "
 	sSpace: .string " "
+	sDoubleSpace: .string "  "
 	sLongSpace: .string "   "
 	sNewline: .string "\n"
 	
@@ -75,7 +76,7 @@ main:
 
 .LfillSpace:
 	cmpq $16, %rbx /* compare loop counter with 16 */
-	jge .LstoreWords /* %rbx >= 16, break out of loop */
+	jge .LinitStoreWords /* %rbx >= 16, break out of loop */
 
 	movq $sLongSpace, %rdi /* move "   into %rdi */
 	call hex_write_string /* print the space to fill in */
@@ -83,9 +84,10 @@ main:
 	incq %rbx /* increment loop counter */
 	jmp .LfillSpace /* jump back to top */
 
-	movq $sSpace, %rdi 
-	call hex_write_string /* print out " " */
+.LinitStoreWords:
+	movq $sDoubleSpace, %rdi 
 
+	call hex_write_string /* print out " " */
 	movq $0, %rbx /* reset loop counter to 0 for next part */
 
 .LstoreWords:
@@ -95,11 +97,6 @@ main:
 	movb (%r12, %rbx, 1), %dil /* get sbuf[i] */
 	
 	call hex_to_printable /* check if char at buf[i] is printable, convert to character */
-
-	/* this tries to print one character at a time
-	movb %al, %dil
-	call hex_write_string
-	*/
 
 	movb %al, (%r12, %rbx, 1) /* store the char to printableWords[i]*/
 	inc %rbx /* increment loop counter */
