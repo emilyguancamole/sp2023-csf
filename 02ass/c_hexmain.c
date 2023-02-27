@@ -5,9 +5,9 @@
 
 int main(void) {
   // TODO: implement the main function
-  char sbuf[17] = {0};
-  char offset[9] = {0};   
-  char hexbuf[3] = {0};
+  char sbuf[17] = {0}; // characters
+  char offset[9] = {0}; // position of the characters
+  char hexbuf[3] = {0}; // store format_byte_as_hex output (a hexadecimal)
   int n = hex_read(sbuf);
   unsigned position = 0;
 
@@ -31,9 +31,8 @@ int main(void) {
     }
 
     hex_write_string(" "); // space before string representation
-    // print 16 hex to printables
-    char printedWords[17] = {0};
-    for (int i = 0; i < n; i++) {
+    char printedWords[17] = {0}; // stores printable values of the ascii values stored in sbuf
+    for (int i = 0; i < n; i++) { // print out printable values
       printedWords[i] = hex_to_printable(sbuf[i]);
     }
     
