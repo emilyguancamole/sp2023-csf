@@ -11,8 +11,7 @@
 	offset: .space 9
 	sbuf: .space 17
 	hexbuf: .space 3
-	printableWords: .space 18
-	
+
 	.section .text
 
 	.globl main
@@ -27,9 +26,7 @@ main:
 	pushq %r12 /* push %r12 onto the stack (store sbuf) */
 	pushq %r13 /* push %r13 onto the stack (store position) */
 	pushq %r14 /* push %r14 onto the stack (store character read n) */
-	pushq %r15 /* push %r15 onto stack (store printableWords array) */
 	pushq %rbx /* callee-saved loop counter */
-	subq $8, %rsp /*again? */
 
 	movq $0, %r13 /* move position number into %r13 */
 
@@ -105,7 +102,6 @@ main:
 .LprintWords:
 /* delete next 2 lines if tyring to print one char at a time*/
 	
-	/*movb $10, (%r15, %rbx, 1) /* newline*/
 	movb $0, (%r12, %rbx, 1) /*move nul term*/
 	movq %r12, %rdi /* move the printableWords array into %rdi */
 
@@ -121,16 +117,12 @@ main:
 	jmp .Ltop /* jump all the way back to the top */
 
 .Ldone:
-	addq $8, %rsp
-
 	popq %rbx
-	popq %r15 /* pop all the callee-saved registers */
 	popq %r14
 	popq %r13
 	popq %r12
 	popq %rbp
 
-	
 	ret
 
 /* vim:ft=gas:
