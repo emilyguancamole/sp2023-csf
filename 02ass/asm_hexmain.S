@@ -3,7 +3,6 @@
 	.section .rodata
 	sColon: .string ": "
 	sSpace: .string " "
-	sDoubleSpace: .string "  "
 	sLongSpace: .string "   "
 	sNewline: .string "\n"
 	
@@ -82,7 +81,7 @@ main:
 	jmp .LfillSpace /* jump back to top */
 
 .LinitStoreWords:
-	movq $sDoubleSpace, %rdi 
+	movq $sSpace, %rdi 
 
 	call hex_write_string /* print out " " */
 	movq $0, %rbx /* reset loop counter to 0 for next part */
