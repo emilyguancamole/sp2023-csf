@@ -93,17 +93,22 @@ main:
 	jge .LprintWords /* if >=n, break out */
 
 	movb (%r12, %rbx, 1), %dil /* get sbuf[i] */
-	call hex_to_printable /* check if char at buf[i] is printable */
+	
+	call hex_to_printable /* check if char at buf[i] is printable, convert to character */
+
+	/* this tries to print one character at a time
 	movb %al, %dil
 	call hex_write_string
+	*/
 
-	;movb %al, (%r15, %rbx, 1) /* store the char to printableWords[i] */
+	movb %al, (%r15, %rbx, 1) /* store the char to printableWords[i]*/
 	inc %rbx /* increment loop counter */
 	jmp .LstoreWords /* jump back to top */
 
 .LprintWords:
-	;movq %r15, %rdi /* move the printableWords array into %rdi */
-	;call hex_write_string /* print out the printableWords array */
+/* delete next 2 lines if tyring to print one char at a time*/
+	movq %r15, %rdi /* move the printableWords array into %rdi */
+	call hex_write_string /* print out the printableWords array */
 
 	movq $sNewline, %rdi
 	call hex_write_string /* print out newline */
