@@ -36,6 +36,7 @@ void testFormatOffsetTooLongOrShort(TestObjs *objs);
 void testHexToPrintableWithinRange(TestObjs *objs);
 void testHexToPrintableWeirdChar(TestObjs *objs);
 void testHexToPrintableLongArray(TestObjs *objs);
+void testForEmptyString(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -55,7 +56,8 @@ int main(int argc, char **argv) {
   TEST(testHexToPrintableWithinRange);
   TEST(testHexToPrintableWeirdChar);
   TEST(testHexToPrintableLongArray);
-
+  TEST(testForEmptyString);
+  
   TEST_FINI();
 
   return 0;
@@ -154,4 +156,19 @@ void testHexToPrintableLongArray(TestObjs *objs) {
   ASSERT('o' == hex_to_printable(objs->test_data_2[18]));
   ASSERT('U' == hex_to_printable(objs->test_data_2[22]));
   ASSERT('>' == hex_to_printable(objs->test_data_2[31]));
+}
+
+void testForEmptyString(TestObjs *objs) {
+  char buf[16];
+  strcpy(objs->test_data_3, "");
+
+  ASSERT('.' == hex_to_printable(objs->test_data_3[0])); // Empty string should return period
+
+  hex_format_byte_as_hex(objs->test_data_3[0], buf); 
+  ASSERT(0 == strcmp(buf, "00")); // Empty string return NULL in hex
+
+  hex_format_offset(0x0, buf);
+  ASSERT(0 == strcmp(buf, "00000000")); // Empty string return array initialized with 0
+
+
 }
