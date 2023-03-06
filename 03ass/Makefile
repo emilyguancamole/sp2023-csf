@@ -1,21 +1,17 @@
-CC = gcc
-CFLAGS = -g -Wall -Wextra -pedantic
+CC = g++
+CFLAGS = -std=c++11 -g -Wall -Wextra -pedantic
 
 SRCS = csim.c
 OBJS = $(SRCS:%.c=%.o)
 
-all : csim
+csim: main.o functions.o
+	$(CC) -o csim main.o functions.o
 
-csim : $(OBJS)
-	$(CC) -o $@ $(OBJS)
+main.o: main.cpp functions.h
+	$(CC) -c main.cpp $(CFLAGS)
 
-clean :
-	rm -f $(OBJS) csim depend.mak
+functions.o: functions.cpp functions.h
+	$(CC) -c functions.cpp $(CFLAGS)
 
-depend :
-	$(CC) $(CFLAGS) -M $(SRCS) > depend.mak
-
-depend.mak :
-	touch $@
-
-include depend.mak
+clean:
+	rm -f *.o csim *~ *.gch
