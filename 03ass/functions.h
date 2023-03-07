@@ -5,7 +5,7 @@ using std::vector;
 struct Block {
     int tag;
     bool dirty; // dirty is for not immediately storing in backing store
-    vector<int> data;
+    vector<int> data; //? how to write in bytes in each block
 };
 
 struct Set {
@@ -27,3 +27,6 @@ void write_back();
 void lru();
 
 void fifo();
+
+
+bool isPowOfTwo(int n);

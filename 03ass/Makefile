@@ -15,3 +15,8 @@ functions.o: functions.cpp functions.h
 
 clean:
 	rm -f *.o csim *~ *.gch
+
+.PHONY: solution.zip
+solution.zip :
+	rm -f solution.zip
+	zip -9r $@ Makefile *.h *.cpp
