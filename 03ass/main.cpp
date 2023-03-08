@@ -9,15 +9,17 @@ using std::string;
 using std::cout;
 using std::cin;
 
+
+
 int main(int argc, char* argv[]) {
     
-    int sets = std::stoi(argv[1]);
+    int num_sets = std::stoi(argv[1]);
     // check to ensure sets is a positive power of 2
-    if (!isPowOfTwo(sets)) {
+    if (!isPowOfTwo(num_sets)) {
       return 1;
     }
 
-    int blocks = std::stoi(argv[2]); 
+    int num_blocks = std::stoi(argv[2]); 
     int bytes = std::stoi(argv[3]); // block size 
 
     string write_func = argv[4];
@@ -28,7 +30,7 @@ int main(int argc, char* argv[]) {
     char command;
     uint32_t address;
     uint32_t offset_size = log2(bytes); // ex. passing 16 would give size=4
-    uint32_t index_size = log2(blocks);
+    uint32_t index_size = log2(num_blocks);
     uint32_t tag_size = 32 - offset_size - index_size; 
     uint32_t index;
     uint32_t tag;

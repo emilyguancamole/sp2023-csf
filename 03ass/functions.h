@@ -1,11 +1,15 @@
+#include <cstdint>
 #include <vector>
+#include <map>
 
 using std::vector;
 
 struct Block {
     int tag;
+    bool valid; // checks if loaded into cache
     bool dirty; // dirty is for not immediately storing in backing store
     vector<int> data; //? how to write in bytes in each block
+    int lru;
 };
 
 struct Set {
@@ -13,7 +17,8 @@ struct Set {
 };
 
 struct Cache {
-    vector<Set> blocks;
+    // index = index, value = block
+    vector<Set> sets;
 };
 
 void write_allocate();
