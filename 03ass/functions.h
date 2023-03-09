@@ -32,17 +32,20 @@ public:
     int num_blocks_in_set;
     int bytes;
 
+    int num_reads;
+    int num_writes;
+
     Cache cache;
 
     CacheSim(int num_sets, int num_blocks_in_set, int bytes); // constructor
 
-    void write_through(uint32_t tag, uint32_t index);
+    void write_through(uint32_t tag, uint32_t index, uint32_t data);
+
+    void write_back(uint32_t tag, uint32_t index, uint32_t data);
 
     void write_allocate();
 
     void no_write_allocate();
-
-    void write_back();
 
     void lru();
 
@@ -52,5 +55,5 @@ public:
 
 private:
     // helper functions
-    void readFromMemory(uint32_t tag, uint32_t index);
+    Block readFromMemory(uint32_t tag, uint32_t index);
 };
