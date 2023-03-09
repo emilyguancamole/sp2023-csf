@@ -4,13 +4,14 @@
 
 using std::vector;
 
+//? structs outside the class?
 struct Block {
-    int tag;
-    bool valid; // checks if loaded into cache
-    bool dirty; // dirty is for not immediately storing in backing store
-    vector<int> data; //? how to write in bytes in each block
-    int lru;
-};
+        uint32_t tag;
+        bool valid; // checks if loaded into cache
+        bool dirty; // dirty is for not immediately storing in backing store
+        vector<int> data; //? how to write in bytes in each block
+        int lru;
+    };
 
 struct Set {
     vector<Block> blocks;
@@ -21,17 +22,35 @@ struct Cache {
     vector<Set> sets;
 };
 
-void write_allocate();
 
-void no_write_allocate();
+class CacheSim {
+public:
+    int miss_count;
+    int hit_count;
+    int cycles;
+    int num_sets;
+    int num_blocks_in_set;
+    int bytes;
 
-void write_through();
+    Cache cache;
 
-void write_back();
+    CacheSim(int num_sets, int num_blocks_in_set, int bytes); // constructor
 
-void lru();
+    void write_through(uint32_t tag, uint32_t index);
 
-void fifo();
+    void write_allocate();
 
+    void no_write_allocate();
 
-bool isPowOfTwo(int n);
+    void write_back();
+
+    void lru();
+
+    void fifo();
+
+    bool isPowOfTwo(int n);
+
+private:
+    // helper functions
+    void readFromMemory(uint32_t tag, uint32_t index);
+};
