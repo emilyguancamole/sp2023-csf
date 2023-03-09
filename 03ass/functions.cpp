@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <set>
+#include <list>
 #include <algorithm>
 
 using std::set;
@@ -43,9 +44,12 @@ CacheSim::CacheSim(int num_sets, int num_blocks_in_set, int bytes, bool write_th
     
 }
 
-void CacheSim::write_through(uint32_t tag, uint32_t index, uint32_t data) {//how to get the data...?
+void CacheSim::write_through(uint32_t tag, uint32_t index, uint32_t data) {//? how to get the data...?
     num_writes++;
-
+    cycles += (bytes/4) * 100; // write to memory
+    // write to cache
+    load_fifo(tag, index, bytes); // call helper
+    //? wait what's the diff between writing to memory vs. cache
 }
 
 void CacheSim::write_back(uint32_t tag, uint32_t index, uint32_t data) {
@@ -76,21 +80,28 @@ void CacheSim::load_fifo(uint32_t tag, uint32_t index, int bytes) {
         cycles++;
         load_hit++;
         // update FIFO or LRU (change the order it is stored...?)
-    } 
-    else { // miss
+    } else { // miss
         load_miss++;
         cycles += (bytes/4) * 100;
 
         for (auto itr : cur_set) { // find an empty spot and make that block valid
             if (itr.valid == false) { 
+                itr.dirty = false;
                 itr.valid = true;
                 itr.tag = tag;
+                fifo_list.push_back(itr); // block was last recently loaded
                 return; 
             }
         }
-
-        // evict based on LRU or FIFO
-        // Update everything
+        // the cache was full, so replace first-in block with new block 
+        Block evicted = fifo_list.front(); //? stores a copy of the first element
+        fifo_list.pop_front(); // remove first-in block
+        evicted.dirty = false; //? reset the block, making it a new block
+        evicted.valid = true;
+        evicted.tag = tag;
+        ////set_block(&evicted, tag); //? lol pass by ref
+        fifo_list.push_back(evicted); // add to fifo list to track when block was made
+        
         // Loop through the set and see if there is an empty block
         // If there is, store there and if not find LRU block, evict and replace
         // Update FIFO or LRU
@@ -106,4 +117,11 @@ bool CacheSim::find(uint32_t tag, uint32_t index) { // checks if it's a hit or m
         } 
     }
     return false;
+}
+
+// inialize new block with properties
+void CacheSim::set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true) {
+    b.dirty = dirty;
+    b.valid = valid;
+    b.tag = tag;
 }

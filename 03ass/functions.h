@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
 
 using std::vector;
 
@@ -42,7 +43,7 @@ public:
     int num_reads;
     int num_writes;
 
-    vector<Block> fifo_list;
+    std::list<Block> fifo_list;
 
     Cache cache;
 
@@ -67,4 +68,5 @@ public:
 private:
     // helper functions
     bool find(uint32_t tag, uint32_t index);
+    void set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true);
 };
