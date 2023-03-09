@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <set>
 
 using std::vector;
 
@@ -10,11 +11,11 @@ struct Block {
         bool valid; // checks if loaded into cache
         bool dirty; // dirty is for not immediately storing in backing store
         vector<int> data; //? how to write in bytes in each block
-        int lru;
+        int time;
     };
 
 struct Set {
-    vector<Block> blocks;
+    std::set<Block> blocks;
 };
 
 struct Cache {
@@ -25,6 +26,9 @@ struct Cache {
 
 class CacheSim {
 public:
+    bool write_thru;
+    bool write_alloc;
+    bool lru_state;
     int load_hit;
     int load_miss;
     int store_hit;
@@ -38,9 +42,11 @@ public:
     int num_reads;
     int num_writes;
 
+    vector<Block> fifo_list;
+
     Cache cache;
 
-    CacheSim(int num_sets, int num_blocks_in_set, int bytes); // constructor
+    CacheSim(int num_sets, int num_blocks_in_set, int bytes, bool write_thru, bool write_alloc, bool lru_state); // constructor
 
     void write_through(uint32_t tag, uint32_t index, uint32_t data);
 
@@ -56,7 +62,7 @@ public:
 
     bool isPowOfTwo(int n);
 
-    void Load(uint32_t tag, uint32_t index, int bytes);
+    void load_fifo(uint32_t tag, uint32_t index, int bytes);
 
 private:
     // helper functions

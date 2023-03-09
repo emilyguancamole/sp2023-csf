@@ -1,8 +1,8 @@
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <string.h>
 #include "functions.h"
 
 using std::string;
@@ -22,9 +22,32 @@ int main(int argc, char* argv[]) {
     int num_blocks = std::stoi(argv[2]); 
     int bytes = std::stoi(argv[3]); // block size 
 
-    string write_func = argv[4];
-    string through_back = argv[5];
-    string evictions = argv[6];
+    const char* write_func = argv[4];
+    if (strcmp(write_func, "write-allocate")){
+        bool write_alloc = true;
+    } else if (strcmp(write_func, "no-write-allocate")) {
+        bool write_thru = false;
+    } else {
+        // error
+    }
+
+    const char* through_back = argv[5];
+    if (strcmp(through_back, "write-through")){
+        bool write_thru = true;
+    } else if (strcmp(through_back, "write-back")) {
+        bool write_thru = false;
+    } else {
+        //error
+    }
+
+    const char* evictions = argv[6];
+    if (strcmp(through_back, "lru")){
+        bool lru = true;
+    } else if (strcmp(through_back, "fifo")) {
+        bool lru = false;
+    } else {
+        //error
+    }
 
     string line;
     char command;
