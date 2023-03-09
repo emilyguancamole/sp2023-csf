@@ -6,12 +6,16 @@
 // Constructor
 CacheSim::CacheSim(int num_sets, int num_blocks_in_set, int bytes) : 
     num_sets(num_sets), num_blocks_in_set(num_blocks_in_set), bytes(bytes) {
+    
+    load_hit = 0;
+    load_miss = 0;
+    store_hit = 0;
+    store_miss = 0;
 
-    miss_count = 0;
-    hit_count = 0;
     cycles = 0;
     num_sets = 0;
     num_blocks_in_set = 0;
+
     num_reads = 0;
     num_writes = 0;
 
@@ -37,11 +41,6 @@ CacheSim::CacheSim(int num_sets, int num_blocks_in_set, int bytes) :
 void CacheSim::write_through(uint32_t tag, uint32_t index, uint32_t data) {//how to get the data...?
     num_writes++;
 
-    Block write_block;
-
-    write_block = readFromMemory(tag, index);
-    write_block.data.push_back(data); // store the data into the block...?
-
 }
 
 void CacheSim::write_back(uint32_t tag, uint32_t index, uint32_t data) {
@@ -63,26 +62,43 @@ void CacheSim::fifo() {
 
 }
 
-Block CacheSim::readFromMemory(uint32_t tag, uint32_t index) {
+void CacheSim::Load(uint32_t tag, uint32_t index, int bytes) {
     num_reads++;
-    Block target;
+    
+    vector<Block> cur_set = cache.sets[index].blocks; // index to the current set of blocks
+
+    if (find(tag, index)) {
+        cycles++;
+        load_hit++;
+        // update FIFO or LRU (change the order it is stored...?)
+    } else {
+        load_miss++;
+        cycles += (bytes/4) * 100;
+
+        for (unsigned int i = 0; i < cur_set.size(); i++) {
+            if (cur_set[i].valid == false) {
+                cur_set[i].valid = true;
+                cur_set[i].dirty = false;
+                cur_set[i].tag = tag;
+                cur_set[i].lru = num_reads;
+                return;
+            } 
+        }
+        // evict based on LRU or FIFO
+        // Update everything
+        // Loop through the set and see if there is an empty block
+        // If there is, store there and if not find LRU block, evict and replace
+        // Update FIFO or LRU
+    }
+}
+
+bool CacheSim::find(uint32_t tag, uint32_t index) { // checks if it's a hit or miss (exist in cache)
     // look at cache at index. then look through set at that index and see if tag matches
     vector<Block> cur_set = cache.sets[index].blocks; // index to the current set of blocks
     for (unsigned int i = 0; i < cur_set.size(); i++) { // iterating through the set at that index
         if (cur_set[i].tag == tag) { // find the block with tag -> read hit
-            hit_count++;
-            cycles++;
-            cur_set[i].lru = num_reads;
-            target = cur_set[i];
-        } else { // read miss -> load the block into the set
-            cycles++;
-            miss_count++;
-            cur_set[i].valid = true;
-            cur_set[i].dirty = false;
-            cur_set[i].tag = tag;
-            cur_set[i].lru = num_reads;
-            target = cur_set[i];
-        }
+            return true;
+        } 
     }
-    return target;
+    return false;
 }

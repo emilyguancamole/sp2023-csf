@@ -25,8 +25,11 @@ struct Cache {
 
 class CacheSim {
 public:
-    int miss_count;
-    int hit_count;
+    int load_hit;
+    int load_miss;
+    int store_hit;
+    int store_miss;
+    
     int cycles;
     int num_sets;
     int num_blocks_in_set;
@@ -53,7 +56,9 @@ public:
 
     bool isPowOfTwo(int n);
 
+    void Load(uint32_t tag, uint32_t index, int bytes);
+
 private:
     // helper functions
-    Block readFromMemory(uint32_t tag, uint32_t index);
+    bool find(uint32_t tag, uint32_t index);
 };
