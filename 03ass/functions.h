@@ -53,7 +53,7 @@ public:
 
     void write_back(uint32_t tag, uint32_t index, uint32_t data);
 
-    void write_allocate();
+    void write_allocate(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
 
     void no_write_allocate();
 
@@ -61,12 +61,11 @@ public:
 
     void fifo();
 
-    bool isPowOfTwo(int n);
+    void store(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
 
-    void load_fifo(uint32_t tag, uint32_t index, int bytes);
+    void load(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
 
 private:
-    // helper functions
-    bool find(uint32_t tag, uint32_t index);
-    void set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true);
+    set<Block>::iterator CacheSim::find(uint32_t tag, uint32_t index);
+    //void set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true);
 };
