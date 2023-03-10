@@ -49,7 +49,11 @@ void CacheSim::write_through(uint32_t tag, uint32_t index, uint32_t data) {//? h
     cycles += (bytes/4) * 100; // write to memory
     // write to cache
     load_fifo(tag, index, bytes); // call helper
-    //? wait what's the diff between writing to memory vs. cache
+    //? what's the diff between writing to memory vs. cache
+    //? diff between load and store -> what are we doing in load_fifo
+
+    // go to cache[index].blocks
+    // add block to a slot in there
 }
 
 void CacheSim::write_back(uint32_t tag, uint32_t index, uint32_t data) {
@@ -75,6 +79,13 @@ void CacheSim::load_fifo(uint32_t tag, uint32_t index, int bytes) {
     num_reads++;
     
     std::set<Block> cur_set = cache.sets[index].blocks; // index to the current set of blocks
+
+    // set<Block>::iterator itr = find(tag, index);
+    // if (itr != cur_set.end()) {
+    //     itr->time = num_reads;
+    // }
+
+
 
     if (find(tag, index)==true) { // hit
         cycles++;
@@ -120,7 +131,7 @@ bool CacheSim::find(uint32_t tag, uint32_t index) { // checks if it's a hit or m
 }
 
 // inialize new block with properties
-void CacheSim::set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true) {
+void CacheSim::set_block(Block &b, uint32_t tag, bool dirty, bool valid) {
     b.dirty = dirty;
     b.valid = valid;
     b.tag = tag;
