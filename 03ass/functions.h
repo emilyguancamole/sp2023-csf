@@ -3,10 +3,12 @@
 #include <map>
 #include <set>
 #include <list>
+#include <string>
 
 using std::vector;
 using std::set;
 using std::map;
+using std::string;
 
 //? structs outside the class?
 struct Block {
@@ -23,12 +25,12 @@ struct Set {
 };
 
 struct Args{
-    int num_sets;
-    int num_blocks_in_set;
-    int bytes;
-    bool write_thru;
-    bool write_alloc;
-    bool lru_state;
+    int num_sets = 0;
+    int num_blocks_in_set = 0;
+    int bytes = 0;
+    bool write_thru = false;
+    bool write_alloc = false;
+    bool lru_state = false;
 };
 
 struct Stats{
@@ -45,18 +47,18 @@ struct Stats{
 class CacheSim {
 private:
     Args vals; // the parameters that are passed in
-    Stats stat;
     int cycle_count = 0;
 
 public:
     int num_reads;
     int num_writes;
+    Stats stat;
 
     vector<Set> sets;
 
     CacheSim(Args vals); // constructor
 
-    void simulate(char command, uint32_t address);
+    void simulate();
 
     void load_block(uint32_t tag, uint32_t index); 
     
