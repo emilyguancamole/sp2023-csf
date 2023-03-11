@@ -5,67 +5,64 @@
 #include <list>
 
 using std::vector;
+using std::set;
+using std::map;
 
 //? structs outside the class?
 struct Block {
-        uint32_t tag;
-        bool valid; // checks if loaded into cache
-        bool dirty; // dirty is for not immediately storing in backing store
-        vector<int> data; //? how to write in bytes in each block
-        int time;
-    };
+        uint32_t tag = -1;
+        bool valid = false; // checks if loaded into cache
+        bool dirty = false; // dirty is for not immediately storing in backing store
+        int time = 0;
+};
 
 struct Set {
-    std::set<Block> blocks;
+    vector<Block> blocks;
+    // key = tag of the block, value = pointer to Block inside the vector
+    map<uint32_t, Block *> block_pointer;
 };
 
 struct Cache {
-    // index = index, value = block
     vector<Set> sets;
+};
+
+struct Args{
+    int num_sets;
+    int num_blocks_in_set;
+    int bytes;
+    bool write_thru;
+    bool write_alloc;
+    bool lru_state;
+};
+
+struct Stats{
+    int load_hit = 0;
+    int load_miss = 0;
+    int store_hit = 0;
+    int store_miss = 0;
+    int tot_loads = 0;
+    int tot_stores = 0;
+    int tot_cycles = 0;
 };
 
 
 class CacheSim {
-public:
-    bool write_thru;
-    bool write_alloc;
-    bool lru_state;
-    int load_hit;
-    int load_miss;
-    int store_hit;
-    int store_miss;
-    
-    int cycles;
-    int num_sets;
-    int num_blocks_in_set;
-    int bytes;
+private:
+    Args vals;
+    Stats stat;
+    int cycle_count = 0;
+    set<Block>::iterator CacheSim::find(uint32_t tag, uint32_t index);
 
+public:
     int num_reads;
     int num_writes;
 
-    std::list<Block> fifo_list;
-
     Cache cache;
 
-    CacheSim(int num_sets, int num_blocks_in_set, int bytes, bool write_thru, bool write_alloc, bool lru_state); // constructor
+    CacheSim(Args vals); // constructor
 
-    void write_through(uint32_t tag, uint32_t index, uint32_t data);
+    void load_block(uint32_t tag, uint32_t index, int bytes); 
+    
+    int evict_block(uint32_t tag, uint32_t index);
 
-    void write_back(uint32_t tag, uint32_t index, uint32_t data);
-
-    void write_allocate(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
-
-    void no_write_allocate();
-
-    void lru();
-
-    void fifo();
-
-    void store(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
-
-    void load(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state);
-
-private:
-    set<Block>::iterator CacheSim::find(uint32_t tag, uint32_t index);
-    //void set_block(Block &b, uint32_t tag, bool dirty=false, bool valid=true);
 };

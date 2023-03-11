@@ -3,163 +3,75 @@
 #include <vector>
 #include <set>
 #include <list>
+#include <map>
 #include <algorithm>
 
 using std::set;
+using std::map;
+using std::pair;
 
 // Constructor
-CacheSim::CacheSim(int num_sets, int num_blocks_in_set, int bytes, bool write_thru, bool write_alloc, bool lru_state) : 
-    num_sets(num_sets), num_blocks_in_set(num_blocks_in_set), bytes(bytes), write_thru(write_thru), write_alloc(write_alloc), lru_state(lru_state) {
-    
-    load_hit = 0;
-    load_miss = 0;
-    store_hit = 0;
-    store_miss = 0;
-
-    cycles = 0;
-    num_sets = 0;
-    num_blocks_in_set = 0;
-
+CacheSim::CacheSim(Args vals) {  
+    this->vals = vals;
     num_reads = 0;
     num_writes = 0;
 
-    
-    int tot_num_blocks = num_blocks_in_set * num_sets;
-
-    
+    int tot_num_blocks = vals.num_blocks_in_set * vals.num_sets;
 
     // initialize all the blocks within each set
-    for (int k = 0; k < num_sets; k++) {
+    for (int k = 0; k < vals.num_sets; k++) {
         Set set;
-        for (int i = 0; i < num_blocks_in_set; i++) {
+        for (int i = 0; i < vals.num_blocks_in_set; i++) {
             Block block;
-            block.dirty = false;
-            block.valid = false;
-            block.tag = -1; // id of block
-            block.time = 0;
-            set.blocks.insert(block);
+            set.blocks.push_back(block);
         }
         cache.sets.push_back(set);
     }
+}
+
+void CacheSim::load_block(uint32_t tag, uint32_t index, int bytes) {
+    this->stat.tot_cycles += (this->vals.bytes/4) * 100;
     
-}
- /*
-void CacheSim::write_through(uint32_t tag, uint32_t index, uint32_t data) {//? how to get the data...?
-    num_writes++;
-    cycles += (bytes/4) * 100; // write to memory
-    // write to cache
-    load(tag, index, bytes, num_blocks_in_set, write_thru); // call helper
-    //? what's the diff between writing to memory vs. cache
-    //? diff between load and store -> what are we doing in load_fifo
+    vector<Block> cur_set = cache.sets[index].blocks; // get the current set of blocks at that index
 
-    // go to cache[index].blocks
-    // add block to a slot in there
-}
- */
+    int load_idx = 0; // index to load the new block
+    bool full_set = true;
 
-
-void CacheSim::write_back(uint32_t tag, uint32_t index, uint32_t data) {
-    //What to do...???
-}
-
-void CacheSim::write_allocate(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state) {
-    load(tag, index, bytes, num_blocks_in_set, lru_state);
-
-}
-
-void CacheSim::no_write_allocate() {
-}
-
-void CacheSim::lru() {
-
-}
-
-void CacheSim::fifo() {
-
-}
-
-void CacheSim::store(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state) {
-    num_writes++;
-
-    set<Block> cur_set = cache.sets[index].blocks;
-    set<Block>::iterator target_itr = find(tag, index);
-
-    if (target_itr != cur_set.end()) {
-        if (lru_state) {
-            Block target = *(target_itr);
-            target.time = num_writes;
+    for (int idx = 0; idx < this->vals.num_blocks_in_set; idx++) {
+        if (cur_set[idx].valid == false) {
+            load_idx = idx;
+            full_set = false;
+            break;
         }
-        cycles++;
-        store_hit++;
-    } else {
-        store_miss++;
-        cycles += (bytes/4) * 100;
-
-        load(tag, index, bytes, num_blocks_in_set, lru_state);
     }
+
+    if (full_set) { // if the set is full
+        load_idx = evict_block(tag, index); // load the new block at this index
+    }
+
+    // override the parameters of the new block
+    cur_set[load_idx].tag = tag;
+    cur_set[load_idx].valid = true;
+    cur_set[load_idx].time = cycle_count;
+
+    // load the new (tag, block) to the map
+    this->cache.sets[index].block_pointer.insert(pair<uint32_t, Block *>(tag, &cur_set[index]));
 }
 
-void CacheSim::load(uint32_t tag, uint32_t index, int bytes, int num_blocks_in_set, bool lru_state) {
-    num_reads++;
+int CacheSim::evict_block(uint32_t tag, uint32_t index) { // iterate through all the blocks and check the time stamp to see which block to evict
+    vector<Block> cur_set = cache.sets[index].blocks;
+    int evict_idx = 0; // index of the block with lowest time stamp
+    uint32_t min = UINT32_MAX;
+
+    for (int idx = 0; idx < this->vals.num_blocks_in_set; idx++) {
+        if (cur_set[idx].time < min) {
+            evict_idx = idx;
+        }
+    }
+
+    // delete the (tag, block) for the evicted block in the map
+    this->cache.sets[index].block_pointer.erase(cur_set[evict_idx].tag);
     
-    set<Block> cur_set = cache.sets[index].blocks; // index to the current set of blocks
-    set<Block>::iterator target_itr = find(tag, index);
-    
-    if (target_itr != cur_set.end()) { // hit
-        if (lru_state) { // need to update time stamp for lru
-            Block target;
-            target = *(target_itr);
-            target.time = num_reads;
-        }
-        cycles++;
-        load_hit++;
-
-    } else { // miss
-        load_miss++;
-        cycles += (bytes/4) * 100;
-
-        Block target;
-        Block replace;
-        int min_lru = INT32_MAX;
-
-        if (cur_set.size() == num_blocks_in_set) { // if the set is full
-            for (target_itr = cur_set.begin(); target_itr != cur_set.end(); target_itr++) { // iterate through to find block with lowest lru value
-                if (target_itr->time < min_lru) {
-                    target = *(target_itr);
-                }
-            }
-            cur_set.erase(target); // erase the block from set
-        }
-
-        if (!lru_state) { // need to set block to dirty....????????/
-            replace.dirty = true;
-        }
-
-        replace.valid = true; // create and set a new block
-        replace.tag = tag;
-        replace.time = num_reads;
-        cur_set.insert(replace); // insert into the set
-    }
+    return evict_idx;
 }
 
-
- set<Block>::iterator CacheSim::find(uint32_t tag, uint32_t index) { // checks if it's a hit or miss (exist in cache)
-    // look at cache at index. then look through set at that index and see if tag matches
-    set<Block> cur_set = cache.sets[index].blocks; // index to the current set of blocks
-    set<Block>::iterator itr;
-    for (itr = cur_set.begin(); itr != cur_set.end(); itr++) { // iterating through the set at that index
-        if (itr->tag == tag) { // find the block with tag -> read hit
-            return itr;
-        } 
-    }
-    return cur_set.end();
-}
-
-/*
-// inialize new block with properties
-void CacheSim::set_block(Block &b, uint32_t tag, bool dirty, bool valid) {
-    b.dirty = dirty;
-    b.valid = valid;
-    b.tag = tag;
-}
-*/
