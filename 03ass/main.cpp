@@ -147,7 +147,18 @@ int main(int argc, char* argv[]) {
     }
    
     CacheSim cache = CacheSim(vals);
-    cache.simulate();
+    char command;
+    uint32_t address;
+    uint32_t third; // the third number in the input file line
+
+    // parse each line in trace file; convert address to hexadecimal
+    while (cin >> command >> std::hex >> address >> third) {
+        // cout << "address: " << address << "\n";
+        // cout << "command: " << command << "\n";
+        cache.simulate(command, address);
+    }
+
+    cache.print_stats(); // print final cache statistics
 
     return 0;
 }

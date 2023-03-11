@@ -58,12 +58,14 @@ public:
 
     CacheSim(Args vals); // constructor
 
-    void simulate();
+    void simulate(char command, uint32_t address);
 
     void load_block(uint32_t tag, uint32_t index); 
     
     int evict_block(uint32_t index);
 
     bool block_exists(uint32_t tag, uint32_t index);
+
+    void print_stats();
 
 };
