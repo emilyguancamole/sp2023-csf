@@ -11,6 +11,7 @@ using std::cin;
 using std::cerr;
 using std::endl;
 using std::exception;
+using std::stoi;
 
 bool isPowOfTwo(int n) {
     if (n <= 0) {
@@ -128,33 +129,29 @@ int main(int argc, char* argv[]) {
     }
     
     Args vals;
-    if (!check_num_sets(argv[1])) {
+    if (!check_num_sets(argv[1]) || !check_num_blocks(argv[2]) || !check_num_bytes(argv[3]) || !check_write_func(&vals, string(argv[4]))
+        || !check_through_back(&vals, string(argv[5])) || !check_noAlloc_back(string(argv[4]),string(argv[5])) || !check_eviction(&vals, string(argv[6]))) {
         return 1;
     }
-    if (!check_num_blocks (argv[2])) {
-        return 1;
-    }
-    if (!check_num_bytes(argv[3])) {
-        return 1;
-    }
-    if (!check_write_func(&vals, string(argv[4]))) {
-        return 1;
-    }
-    if (!check_through_back(&vals, string(argv[5]))) {
-        return 1;
-    }
-    if (!check_noAlloc_back(string(argv[4]),string(argv[5]))) {
-        return 1;
-    }
-    if (!check_eviction(&vals, string(argv[6]))) {
-        return 1;
-    }
+    vals.num_sets = stoi(argv[1]);
+    vals.num_blocks_in_set = stoi(argv[2]);
+    vals.bytes = stoi(argv[3]);
+    // vals.write_thru =  stoul(argv[4]);
+    // vals.write_alloc = stoul(argv[5]);
+    // vals.lru_state =  stoul(argv[6]);
     
     CacheSim cache = CacheSim(vals);
-    cache.simulate();
 
-    
-    
+    char command;
+    uint32_t address;
+    uint32_t trash; // the third number in the input file line
 
+    // parse each line in trace file; convert address to hexadecimal
+    while (cin >> command >> std::hex >> address >> trash) { 
+        
+        cout << "address: " << address << "\n";
+        cout << "command: " << command << "\n";
+        cache.simulate(command, address);
+    }
     return 0;
 }

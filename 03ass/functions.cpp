@@ -34,55 +34,45 @@ CacheSim::CacheSim(Args vals) {
     }
 }
 
-void CacheSim::simulate() {
-    string line;
-    string command; //? okay to do str comparisons?
-    uint32_t address;
-    string address_str;
-    uint32_t trash; // the third number in the input file line
+void CacheSim::simulate(char command, uint32_t address) {
+
     uint32_t offset_size = log2(vals.bytes); // ex. passing 16 would give size=4
     uint32_t index_size = log2(vals.num_blocks_in_set);
     uint32_t tag_size = 32 - offset_size - index_size; 
     uint32_t index;
     uint32_t tag;
 
+
+    index = address; // make a copy of address
+    index = index << tag_size >> (tag_size + offset_size); // shift to only get index
+    tag = address;
+    tag = tag >> (index_size + offset_size); // only get tag
+
+    cout << "\taddress: " << address << "\n";
+    cout << "\tcommand: " << command << "\n";
+    cout << "\tindex: " << index << "\n";
     
-    while (cin >> command >> address_str >> trash) { // read line by line
-        std::stringstream ss; // store address string
-        ss << std::hex << address_str.substr(2, 8); // parse as hexadecimal
-        ss >> address;
-
-        index = address; // make a copy of address
-        index = index << tag_size >> (tag_size + offset_size); // shift to only get index
-        tag = address;
-        tag = tag >> (index_size + offset_size); // only get tag
-
-        cout << "address: " << address << "\n";
-        cout << "tag: " << tag << "\n";
-        cout << "index: " << index << "\n";
-        
-        // some type of switch stmt to process command (s or l)
-        if (command == "l") {
-            
-            // hit: tag at index already exists, so increment stats and don't load
-            if (block_exists(tag, index)) { 
-                stat.load_hit++;
-                stat.tot_cycles++;
-                if (vals.lru_state) {
-                    sets[index].block_pointer.at(tag)->time = cycle_count;
-                }
-            } else { // miss, so load block
-                stat.load_miss++;
-                load_block(tag, index);
+    // some type of switch stmt to process command (s or l)
+    if (command == 'l') {
+        // hit: tag at index already exists, so increment stats and don't load
+        if (block_exists(tag, index)) { 
+            stat.load_hit++;
+            stat.tot_cycles++;
+            if (vals.lru_state) {
+                sets[index].block_pointer.at(tag)->time = cycle_count;
             }
-            
-        } 
-        else if (command == "s") {
-            
+        } else { // miss, so load block
+            stat.load_miss++;
+            load_block(tag, index);
         }
-        cycle_count++;
+        
+    } 
+    else if (command == 's') {
+        
     }
+    cycle_count++;
 }
+
 
 void CacheSim::load_block(uint32_t tag, uint32_t index) {
     this->stat.tot_cycles += (this->vals.bytes/4) * 100; // load from memory to cache
@@ -135,6 +125,7 @@ int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks an
 }
 
 bool CacheSim::block_exists(uint32_t tag, uint32_t index) {
+    cout << "block_exists" << "\n";
     if (sets[index].block_pointer.find(tag) != sets[index].block_pointer.end()) {
         // tag at index already exists
         return true;
