@@ -13,17 +13,13 @@ struct Block {
         uint32_t tag = -1;
         bool valid = false; // checks if loaded into cache
         bool dirty = false; // dirty is for not immediately storing in backing store
-        int time = 0;
+        uint32_t time = 0;
 };
 
 struct Set {
     vector<Block> blocks;
     // key = tag of the block, value = pointer to Block inside the vector
     map<uint32_t, Block *> block_pointer;
-};
-
-struct Cache {
-    vector<Set> sets;
 };
 
 struct Args{
@@ -48,21 +44,24 @@ struct Stats{
 
 class CacheSim {
 private:
-    Args vals;
+    Args vals; // the parameters that are passed in
     Stats stat;
     int cycle_count = 0;
-    set<Block>::iterator CacheSim::find(uint32_t tag, uint32_t index);
 
 public:
     int num_reads;
     int num_writes;
 
-    Cache cache;
+    vector<Set> sets;
 
     CacheSim(Args vals); // constructor
 
-    void load_block(uint32_t tag, uint32_t index, int bytes); 
+    void simulate();
+
+    void load_block(uint32_t tag, uint32_t index); 
     
-    int evict_block(uint32_t tag, uint32_t index);
+    int evict_block(uint32_t index);
+
+    bool block_exists(uint32_t tag, uint32_t index);
 
 };

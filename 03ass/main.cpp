@@ -117,9 +117,12 @@ bool check_eviction(Args *vals, string eviction) {
     return true;
 }
 
+
+
 int main(int argc, char* argv[]) {
 
     if (argc != 7) { // Check for correct number of arguments
+        cerr << argc;
         cerr << "Given Number of Arguments is Invalid!" << endl;
         return 1;
     }
@@ -148,42 +151,9 @@ int main(int argc, char* argv[]) {
     }
     
     CacheSim cache = CacheSim(vals);
-    //cache.simulate();
-
-    string line;
-    char command;
-    uint32_t address;
-    uint32_t offset_size = log2(vals.bytes); // ex. passing 16 would give size=4
-    uint32_t index_size = log2(vals.num_blocks_in_set);
-    uint32_t tag_size = 32 - offset_size - index_size; 
-    uint32_t index;
-    uint32_t tag;
+    cache.simulate();
 
     
-    while (std::getline(cin, line)) { // read line by line
-        std::istringstream ss(line); // store line into string buffer
-        ss >> command;
-        ss >> std::hex >> address; // parse as hexadecimal
-        ss.clear(); // last element isn't used
-
-        index = address; // make a copy of address
-        index = index << tag_size >> (tag_size + offset_size); // shift to only get index
-        tag = address;
-        tag = tag >> (index_size + offset_size); // only get tag
-
-        
-        cout << "address: " << address << "\n";
-        cout << "tag: " << tag << "\n";
-        cout << "index: " << index << "\n";
-
-        // some type of switch stmt to process command (s or l)
-        if (command == 's') {
-          
-        } 
-        else if (command == 'l') {
-
-        }
-    }
     
 
     return 0;
