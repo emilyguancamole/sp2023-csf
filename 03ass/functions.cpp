@@ -80,11 +80,36 @@ void CacheSim::simulate(char command, uint32_t address) {
             load_block(tag, index);
         }
     }  else if (command == 's') {
+        this->stat.tot_stores++;
+
+        if (this->vals.write_thru) {
+            this->stat.tot_cycles += 100;
+        }
+
+        if (block_exists(tag, index)) {
+            this->stat.store_hit++;
+            this->stat.tot_cycles++;
+            if (!this->vals.write_thru) {
+                this->sets[index].block_pointer.at(tag)->dirty = true;
+            }
+            if (vals.lru_state) {
+                this->sets[index].block_pointer.at(tag)->time = cycle_count;
+            }
+
+        } else {
+            this->stat.store_miss++;
+            if (this->vals.write_alloc) {
+                load_block(tag, index);
+                if (!this->vals.write_thru) {
+                    this->stat.tot_cycles++;
+                    this->sets[index].block_pointer.at(tag)->dirty = true;
+                }
+            }
+        }
         
     }
     this->cycle_count++;
 }
-
 
 
 void CacheSim::load_block(uint32_t tag, uint32_t index) {
@@ -127,6 +152,10 @@ int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks an
         }
     }
 
+    if (cur_set[evict_idx].dirty) {
+        this->stat.tot_cycles += (this->vals.bytes/4) * 100;
+    }
+
     // delete the (tag, block) for the evicted block in the map
     this->sets[index].block_pointer.erase(cur_set[evict_idx].tag);
     
@@ -142,9 +171,6 @@ bool CacheSim::block_exists(uint32_t tag, uint32_t index) {
         return false;
     }
 }
-
-
-
 
 void CacheSim::print_stats() {
   cout << "Total loads: " << stat.tot_loads << endl;
