@@ -1,8 +1,8 @@
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -Wextra -pedantic
 
-SRCS = csim.c
-OBJS = $(SRCS:%.c=%.o)
+# SRCS = csim.c
+# OBJS = $(SRCS:%.c=%.o)
 
 csim: main.o functions.o
 	$(CC) -o csim main.o functions.o

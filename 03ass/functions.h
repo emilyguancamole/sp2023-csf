@@ -9,12 +9,12 @@ using std::vector;
 using std::map;
 using std::string;
 
-//? structs outside the class?
 struct Block {
-        uint32_t tag = -1;
-        bool valid = false; // checks if loaded into cache
-        bool dirty = false; // dirty is for not immediately storing in backing store
-        uint32_t time = 0;
+    uint32_t tag = -1;
+    bool valid = false; // checks if loaded into cache
+    bool dirty = false; // dirty is for not immediately storing in backing store
+    uint32_t time_lru = 0;
+    uint32_t time_fifo = 0;
 };
 
 struct Set {
