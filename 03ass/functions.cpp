@@ -21,6 +21,7 @@ CacheSim::CacheSim(Args vals) {
     this->vals = vals;
     num_reads = 0;
     num_writes = 0;
+    cycle_count = 0;
 
     //int tot_num_blocks = vals.num_blocks_in_set * vals.num_sets;
 
@@ -65,63 +66,62 @@ void CacheSim::simulate(char command, uint32_t address) {
     cout << "tag: " << tag << endl;
     */
     
-    
+    //this->stat.tot_cycles++; // actual parameter, increment cycles bc dealing with cache
+
     if (command == 'l') {
         this->stat.tot_loads++;
         // hit: tag at index already exists, so increment stats and don't load
         if (block_exists(tag, index)) { 
             this->stat.load_hit++;
-            this->stat.tot_cycles++;
+            this->stat.tot_cycles++; // found the block, so loads to/from cache take 1 cycle
             if (vals.lru_state) {
                 this->sets[index].block_pointer.at(tag)->time = cycle_count;
             }
-        } else { // miss, so load block
+        } else { // miss, so load block from memory
             this->stat.load_miss++;
             load_block(tag, index);
         }
     }  else if (command == 's') {
-        this->stat.tot_stores++;
-
-        if (this->vals.write_thru) {
-            this->stat.tot_cycles += 100;
+        stat.tot_stores++;
+        if (vals.write_thru) { // write-through store writes to the cache as well as to memory
+            stat.tot_cycles += 100;
         }
 
-        if (block_exists(tag, index)) {
-            this->stat.store_hit++;
-            this->stat.tot_cycles++;
-            if (!this->vals.write_thru) {
-                this->sets[index].block_pointer.at(tag)->dirty = true;
+        if (block_exists(tag, index)) { // store hit
+            (stat.store_hit)++;
+            this->stat.tot_cycles++; // found the block, so stores to/from cache take 1 cycle
+            if (!vals.write_thru) { // write-back writes to the cache only and marks the block dirty
+                sets[index].block_pointer.at(tag)->dirty = true;
             }
-            if (vals.lru_state) {
-                this->sets[index].block_pointer.at(tag)->time = cycle_count;
+            if (vals.lru_state) { // update timestamp for lru
+                sets[index].block_pointer.at(tag)->time = cycle_count++; 
             }
-
-        } else {
-            this->stat.store_miss++;
-            if (this->vals.write_alloc) {
+        } else { // store miss
+            (stat.store_miss)++; 
+            if (this->vals.write_alloc) { // write alloc: load block from memory into cache
                 load_block(tag, index);
-                if (!this->vals.write_thru) {
-                    this->stat.tot_cycles++;
+                if (!this->vals.write_thru) { // if write back, set dirty to true
+                    //this->stat.tot_cycles++; //?? i think we do this in load_block
                     this->sets[index].block_pointer.at(tag)->dirty = true;
                 }
             }
         }
         
     }
-    this->cycle_count++;
+    this->cycle_count++; // increment count for each line of trace file
 }
 
 
 void CacheSim::load_block(uint32_t tag, uint32_t index) {
-    this->stat.tot_cycles += (this->vals.bytes/4) * 100; // load from memory to cache
+    vector<Block> cur_set = sets[index].blocks; // get the current vector of blocks at the correct set
     
-    vector<Block> cur_set = this->sets[index].blocks; // get the current vector of blocks at the correct set
+    this->stat.tot_cycles += (this->vals.bytes/4) * 100; // load from memory to cache
 
     int load_idx = 0; // index to load the new block
     bool full_set = true;
     
     for (int idx = 0; idx < this->vals.num_blocks_in_set; idx++) { //looping through set to find an empty place in blocks
-        if (cur_set[idx].valid == false) { // empty block
+        if (sets[index].blocks[idx].valid == false) { // empty block
             load_idx = idx; // index of vector of blocks
             full_set = false;
             break;
@@ -129,16 +129,20 @@ void CacheSim::load_block(uint32_t tag, uint32_t index) {
     }
 
     if (full_set) { // if the set is full
-        load_idx = evict_block(index); // load the new block at this index
+        load_idx = evict_block(index); // load the new block at the index of evicted block
     }
 
     // override the parameters of the new block
-    cur_set[load_idx].tag = tag;
-    cur_set[load_idx].valid = true;
-    cur_set[load_idx].time = cycle_count;
+    sets[index].blocks[load_idx].tag = tag;
+    sets[index].blocks[load_idx].valid = true;
+    sets[index].blocks[load_idx].time = cycle_count++;
  
-    // load the new (tag, block) to the map
-    this->sets[index].block_pointer.insert(pair<uint32_t, Block *>(tag, &cur_set[load_idx]));
+    // cur_set[load_idx].tag = tag;
+    // cur_set[load_idx].valid = true;
+    // cur_set[load_idx].time = cycle_count++;
+
+    // load the new (tag, block) to the map, so the new location in map points to new block
+    sets[index].block_pointer.insert(pair<uint32_t, Block *>(tag, &(sets[index].blocks[load_idx])));
 }
 
 int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks and check the time stamp to see which block to evict
@@ -147,17 +151,17 @@ int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks an
     uint32_t min = UINT32_MAX;
 
     for (int idx = 0; idx < this->vals.num_blocks_in_set; idx++) {
-        if (cur_set[idx].time < min) {
+        if (sets[index].blocks[idx].time < min) {
             evict_idx = idx;
         }
     }
-
-    if (cur_set[evict_idx].dirty) {
+    // if write-back and block is dirty, need to write to memory before evicting
+    if (!vals.write_thru && sets[index].blocks[evict_idx].dirty) {
         this->stat.tot_cycles += (this->vals.bytes/4) * 100;
     }
 
     // delete the (tag, block) for the evicted block in the map
-    this->sets[index].block_pointer.erase(cur_set[evict_idx].tag);
+    this->sets[index].block_pointer.erase(sets[index].blocks[evict_idx].tag);
     
     return evict_idx;
 }
