@@ -6,7 +6,6 @@
 #include <string>
 
 using std::vector;
-using std::set;
 using std::map;
 using std::string;
 
@@ -47,7 +46,7 @@ struct Stats{
 class CacheSim {
 private:
     Args vals; // the parameters that are passed in
-    int cycle_count = 0;
+    int cycle_count; // counting number of lines in the trace file, used for timestamp
 
 public:
     int num_reads;
@@ -60,7 +59,12 @@ public:
 
     void simulate(char command, uint32_t address);
 
-    void load_block(uint32_t tag, uint32_t index); 
+    void load_block(uint32_t tag, uint32_t index);
+
+    void store_block(uint32_t tag, uint32_t index);
+
+    void update_block(uint32_t tag, uint32_t index);
+    //void load_block(uint32_t tag, uint32_t index); 
     
     int evict_block(uint32_t index);
 
