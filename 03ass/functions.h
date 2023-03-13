@@ -63,8 +63,10 @@ public:
 
     void store_block(uint32_t tag, uint32_t index);
 
-    void update_block(uint32_t tag, uint32_t index);
+    void load_miss(uint32_t tag, uint32_t index);
     //void load_block(uint32_t tag, uint32_t index); 
+
+    int find_load_idx(uint32_t tag, uint32_t index);
     
     int evict_block(uint32_t index);
 
