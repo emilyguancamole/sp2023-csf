@@ -58,6 +58,7 @@ void CacheSim::simulate(char command, uint32_t address) {
         store_block(tag, index);
     }
     stat.tot_cycles++; // increment cycles for each load/store instr bc dealing with cache
+
     cycle_count++; // increment count for each line of trace file
 }
 
@@ -71,7 +72,10 @@ void CacheSim::load_block(uint32_t tag, uint32_t index) {
         stat.load_miss++;
         stat.tot_cycles += (vals.bytes/4) * 100; // load from memory to cache
 
-        load_miss(tag, index); // load enw block
+        load_miss(tag, index); // load new block
+        if (!vals.write_thru) {
+            sets[index].block_pointer[tag]->dirty = false; // reset to dirty
+        }
     }
 }
 
@@ -81,9 +85,9 @@ void CacheSim::store_block(uint32_t tag, uint32_t index) {
         if (!vals.write_thru) { // write-back writes to the cache only and marks the block dirty
             sets[index].block_pointer.at(tag)->dirty = true;
         }
-        if (vals.lru_state) { // update timestamp for lru
+        //if (vals.lru_state) { // update timestamp for lru
             sets[index].block_pointer.at(tag)->time_lru = cycle_count; 
-        }
+        //}
     } else { // store miss
         (stat.store_miss)++; 
         if (vals.write_alloc) { // write alloc: load block from memory into cache
@@ -99,11 +103,15 @@ void CacheSim::store_block(uint32_t tag, uint32_t index) {
 void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     //vector<Block> cur_set = sets[index].blocks; // get the current vector of blocks at the correct set
     int load_idx = find_load_idx(tag, index); // index to load the new block
-    //bool full_set = true;
+   
+    // if write-back and block is dirty, need to write to memory before evicting
+    if (!vals.write_thru && sets[index].blocks[load_idx].dirty) {
+        this->stat.tot_cycles += (vals.bytes/4) * 100;
+    }
 
-    // if (full_set) { // if the set is full
-    //     load_idx = evict_block(index); // load the new block at the index of evicted block
-    // }
+    if (load_idx == -1) {
+        load_idx = evict_block(index);
+    }
 
     // override the parameters of the new block
     sets[index].blocks[load_idx].tag = tag;
@@ -115,8 +123,9 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     sets[index].block_pointer[tag] = &(sets[index].blocks[load_idx]);
 }
 
+// finds index of empty spot in blocks if found. If not found, return -1.
 int CacheSim::find_load_idx(uint32_t tag, uint32_t index) {
-    int load_idx = 0; // index to load the new block
+    int load_idx = -1; // index to load the new block
     // loop through set to find an empty place in blocks
     for (int k = 0; k < vals.num_blocks_in_set; k++) { 
         if (sets[index].blocks[k].valid == false) { // found an empty block to replace
@@ -124,14 +133,13 @@ int CacheSim::find_load_idx(uint32_t tag, uint32_t index) {
             return load_idx; // return the index and break out of the function
         }
     }
-    // if reached here, must evict based on lru or fifo
-    load_idx = evict_block(index); // load the new block at the index of evicted block
+    //// if reached here, must evict based on lru or fifo
+    //load_idx = evict_block(index); // load the new block at the index of evicted block
 
-    return load_idx; // this would be index of evicted
+    return load_idx; // not found, meaning blocks is full
 }
 
 int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks and check the time stamp to see which block to evict
-    //vector<Block> cur_set = this->sets[index].blocks;
     int evict_idx = 0; // index of the block with lowest time stamp
     uint32_t min = UINT32_MAX;
 
@@ -144,28 +152,29 @@ int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks an
             min = sets[index].blocks[k].time_fifo; // new minimum time
         }
     }
+    //moved below up toload_miss
+    // // if write-back and block is dirty, need to write to memory before evicting
+    // if (!vals.write_thru && sets[index].blocks[evict_idx].dirty) {
+    //     this->stat.tot_cycles += (vals.bytes/4) * 100;
+    // }
 
-    // if write-back and block is dirty, need to write to memory before evicting
-    if (!vals.write_thru && sets[index].blocks[evict_idx].dirty) {
-        this->stat.tot_cycles += (vals.bytes/4) * 100;
-    }
     // delete the (tag, block) for the evicted block in the map
     uint32_t tag_evicted = sets[index].blocks[evict_idx].tag; //? before was erasing this -> only erases at the vecotr blocks[] and not the map?? idk
-    if (sets[index].blocks[evict_idx].valid) { // make sure there was a block at the evicted index
+    if (sets[index].blocks[evict_idx].valid) {
         sets[index].block_pointer.erase(sets[index].block_pointer.find(tag_evicted));
     }
     return evict_idx;
 }
 
 bool CacheSim::block_exists(uint32_t tag, uint32_t index) {
-    map<uint32_t, Block*>::iterator itr = sets[index].block_pointer.find(tag);
+    // map<uint32_t, Block*>::iterator itr = sets[index].block_pointer.find(tag);
 
-    if (itr != sets[index].block_pointer.end()){
-        return true;
-    } else {
-        return false;
-    }
-    //return (sets[index].block_pointer.find(tag) != sets[index].block_pointer.end());
+    // if (itr != sets[index].block_pointer.end()){
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+    return (sets[index].block_pointer.find(tag) != sets[index].block_pointer.end());
 }
 
 void CacheSim::print_stats() {
