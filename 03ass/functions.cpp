@@ -59,7 +59,7 @@ void CacheSim::simulate(char command, uint32_t address) {
         
     }
     stat.tot_cycles++; // increment cycles for each load/store instr bc dealing with cache
-    cycle_count++; // increment count for each line of trace file
+    //cycle_count++; // increment count for each line of trace file
 }
 
 void CacheSim::load_block(uint32_t tag, uint32_t index) {
@@ -67,7 +67,7 @@ void CacheSim::load_block(uint32_t tag, uint32_t index) {
     if (block_exists(tag, index)) { 
         stat.load_hit++;
         if (vals.lru_state) {
-            sets[index].block_pointer.at(tag)->time = cycle_count;
+            sets[index].block_pointer.at(tag)->time = cycle_count++; //?++
         }
     } else { // load miss, so load block from memory
         stat.load_miss++; 
@@ -84,14 +84,13 @@ void CacheSim::store_block(uint32_t tag, uint32_t index) {
             sets[index].block_pointer.at(tag)->dirty = true;
         }
         if (vals.lru_state) { // update timestamp for lru
-            sets[index].block_pointer.at(tag)->time = cycle_count++; 
+            sets[index].block_pointer.at(tag)->time = cycle_count++; //? ++ 
         }
     } else { // store miss
         (stat.store_miss)++; 
         if (vals.write_alloc) { // write alloc: load block from memory into cache
             load_miss(tag, index);
             if (!vals.write_thru) { // if write back, set dirty to true
-                //this->stat.tot_cycles++; //?? i think we do this in load_block
                 this->sets[index].block_pointer.at(tag)->dirty = true;
             }
             stat.tot_cycles += (vals.bytes/4) * 100; //? need to make sure cycles are updated by /4*100 every time // update cycles from loading from memory
@@ -103,8 +102,6 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     //vector<Block> cur_set = sets[index].blocks; // get the current vector of blocks at the correct set
     int load_idx = 0; // index to load the new block
     bool full_set = true;
-    
-    
 
     // if (full_set) { // if the set is full
     //     load_idx = evict_block(index); // load the new block at the index of evicted block
@@ -113,7 +110,7 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     // override the parameters of the new block
     sets[index].blocks[load_idx].tag = tag;
     sets[index].blocks[load_idx].valid = true;
-    sets[index].blocks[load_idx].time = cycle_count++; // this also updates timestamp for fifo
+    sets[index].blocks[load_idx].time = cycle_count++; //?++ // this also updates timestamp for fifo
 
     // load the new (tag, block) to the map, so the new location in map points to new block
     sets[index].block_pointer[tag] = &(sets[index].blocks[load_idx]);
