@@ -35,8 +35,8 @@ CacheSim::CacheSim(Args vals) {
 }
 
 void CacheSim::simulate(char command, uint32_t address) {
-
-    uint32_t offset_size = log2(vals.bytes); // ex. passing 16 would give size=4
+    // calculate offset and index size for shifting the address
+    uint32_t offset_size = log2(vals.bytes); 
     uint32_t index_size = log2(vals.num_blocks_in_set);
 
     uint32_t index = 0; // initialize to 0
@@ -56,7 +56,6 @@ void CacheSim::simulate(char command, uint32_t address) {
         }
 
         store_block(tag, index);
-        
     }
     stat.tot_cycles++; // increment cycles for each load/store instr bc dealing with cache
     cycle_count++; // increment count for each line of trace file
@@ -99,8 +98,8 @@ void CacheSim::store_block(uint32_t tag, uint32_t index) {
 
 void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     //vector<Block> cur_set = sets[index].blocks; // get the current vector of blocks at the correct set
-    int load_idx = 0; // index to load the new block
-    bool full_set = true;
+    int load_idx = find_load_idx(tag, index); // index to load the new block
+    //bool full_set = true;
 
     // if (full_set) { // if the set is full
     //     load_idx = evict_block(index); // load the new block at the index of evicted block
