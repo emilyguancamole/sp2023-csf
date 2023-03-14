@@ -122,30 +122,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    Args vals;
-    if (!check_num_sets(&vals, argv[1])) {
+    Args args;
+    if (!check_num_sets(&args, argv[1])) {
         return 1;
     }
-    if (!check_num_blocks(&vals, argv[2])) {
+    if (!check_num_blocks(&args, argv[2])) {
         return 1;
     }
-    if (!check_num_bytes(&vals, argv[3])) {
+    if (!check_num_bytes(&args, argv[3])) {
         return 1;
     }
-    if (!check_write_func(&vals, string(argv[4]))) {
+    if (!check_write_func(&args, string(argv[4]))) {
         return 1;
     }
-    if (!check_through_back(&vals, string(argv[5]))) {
+    if (!check_through_back(&args, string(argv[5]))) {
         return 1;
     }
     if (!check_noAlloc_back(string(argv[4]),string(argv[5]))) {
         return 1;
     }
-    if (!check_eviction(&vals, string(argv[6]))) {
+    if (!check_eviction(&args, string(argv[6]))) {
         return 1;
     }
    
-    CacheSim cache = CacheSim(vals);
+    CacheSim cache = CacheSim(args);
     char command;
     uint32_t address;
     uint32_t third; // the third number in the input file line

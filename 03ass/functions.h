@@ -10,7 +10,7 @@ using std::map;
 using std::string;
 
 struct Block {
-    uint32_t tag = -1;
+    uint32_t tag = 0;
     bool valid = false; // checks if loaded into cache
     bool dirty = false; // dirty is for not immediately storing in backing store
     uint32_t time_lru = 0;
@@ -21,6 +21,7 @@ struct Set {
     vector<Block> blocks;
     // key = tag of the block, value = pointer to Block inside the vector
     map<uint32_t, Block *> block_pointer;
+    int filled_count; // keep track of number of blocks filled
 };
 
 struct Args{
