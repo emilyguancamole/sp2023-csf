@@ -32,9 +32,8 @@ bool check_num_sets(Args *vals, string numSets) {
     if (!isValidNum(numSets)) { //check if the argument is valid
         cerr << "Given Number of Sets is Invalid!" << endl;
         return false;
-    } else {
-        vals->num_sets = stoi(numSets);
-    }
+    } 
+    vals->num_sets = stoi(numSets);
     if (!isPowOfTwo(vals->num_sets)) { // check to ensure sets is a positive power of 2
         cerr << "Given Number of Sets is Not a Power of 2!" << endl;
         return false;
@@ -46,9 +45,8 @@ bool check_num_blocks(Args *vals, string numBlocks) {
     if (!isValidNum(numBlocks)) { //check if the argument is valid
         cerr << "Given Number of Blocks is Invalid!" << endl;
         return false;
-    } else {
-        vals->num_blocks_in_set = stoi(numBlocks);
     }
+    vals->num_blocks_in_set = stoi(numBlocks);
     if (!isPowOfTwo(vals->num_blocks_in_set)) { // check to ensure num of blocks is a positive power of 2
         cerr << "Given Number of Blocks is Not a Power of 2!" << endl;
         return false;
@@ -60,9 +58,8 @@ bool check_num_bytes(Args *vals, string numBytes) {
     if (!isValidNum(numBytes)) { //check if the argument is valid
         cerr << "Given Number of Bytes is Invalid!" << endl;
         return false;
-    } else {
-        vals->bytes = stoi(numBytes);
     }
+    vals->bytes = stoi(numBytes);
     if (vals->bytes < 4 || !isPowOfTwo(vals->bytes)) { // check to ensure sets is a positive power of 2
         cerr << "Given Number of Blocks Must be a Power of 2 and Greater than 4!" << endl;
         return false;
@@ -95,7 +92,7 @@ bool check_through_back(Args *vals, string through_back) {
 }
 
 bool check_noAlloc_back(string write_func, string through_back) {
-    if (write_func.compare("no-write-allocate") == 0 && through_back.compare("write-back") == 0) {
+    if ((write_func.compare("no-write-allocate") == 0) && (through_back.compare("write-back") == 0)) {
         cerr << "Cannot specify no-write-allocate and write-back together" << endl;
         return false;
     }
