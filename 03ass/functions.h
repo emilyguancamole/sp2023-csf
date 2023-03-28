@@ -1,3 +1,10 @@
+/*
+ * Declaration of CacheSim, class for a cache simulator that mimics loads, stores, and cycles of a cache,
+ * along with properties to specify cache configuration and statistics.
+ * CSF Assignment 3
+ * Emily Guan, eguan2
+ * Esther Kwon, 
+ */
 #include <cstdint>
 #include <vector>
 #include <map>
@@ -9,6 +16,9 @@ using std::vector;
 using std::map;
 using std::string;
 
+/*
+* Block struct storing properties of a block/slot within the cache.
+*/
 struct Block {
     uint32_t tag = 0;
     bool valid = false; // checks if loaded into cache
@@ -17,13 +27,17 @@ struct Block {
     uint32_t time_fifo = 0;
 };
 
+/*
+* Set struct storing a vector of Blocks and map to locate each block.
+*/
 struct Set {
     vector<Block> blocks;
-    // key = tag of the block, value = pointer to Block inside the vector
-    map<uint32_t, Block *> block_pointer;
-    //int filled_count; // keep track of number of blocks filled
+    map<uint32_t, Block *> block_pointer; // key = tag of the block, value = pointer to Block inside the vector
 };
 
+/*
+* Args struct storing arguments that specify a particular cache configuration.
+*/
 struct Args{
     int num_sets = 0;
     int num_blocks_in_set = 0;
@@ -33,6 +47,9 @@ struct Args{
     bool lru_state = false;
 };
 
+/*
+* Stats struct storing statistics for the cache simulator to be outputted.
+*/
 struct Stats{
     int load_hit = 0;
     int load_miss = 0;
@@ -43,7 +60,9 @@ struct Stats{
     int tot_cycles = 0;
 };
 
-
+/*
+* Definition of CacheSim class. Simulates loads and stores of a cache for a specified configuration.
+*/
 class CacheSim {
 private:
     Args vals; // the parameters that are passed in
@@ -54,9 +73,21 @@ public:
     int num_reads;
     int num_writes;
     Stats stat;
+    /*
+    * CacheSim constructor; initializes stats to 0 and initializes all Blocks in each set
+    * 
+    * Parameters:
+    *   vals - 
+    */
+    CacheSim(Args vals);
 
-    CacheSim(Args vals); // constructor
-
+    /*
+    * Carries out cache simulation. Calculates index, handles loads, stores, and updating statistics.
+    * 
+    * Parameters:
+    *  command - specifies l for load, s for store
+    *  address - memory address in hexadecimal
+    */
     void simulate(char command, uint32_t address);
 
     void load_block(uint32_t tag, uint32_t index);

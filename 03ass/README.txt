@@ -8,7 +8,7 @@ We tested write policies: (write-allocate + write-back), (write-allocate + write
 (no-write-allocate + write-through) for each configuration.
 
 For each combination of configuration and the above parameters, we repeated the tests with lru and fifo 
-(fifo was not done with direct-mapping, as eviction type does not matter).
+(fifo was not done with direct-mapping, as eviction type does not matter and would ).
 
 The number of sets and blocks per set were changed to alter the cache configuration 
 (i.e. direct-map has n sets of 1 block, fully associative cache has 1 set of n blocks).
@@ -146,7 +146,7 @@ Set-associative:
 
 ***** ANALYSIS *****
 
-When comparing across cache configurations (direct mapping vs. fully asssociative vs. set associative),
+When comparing across cache mapping techniques (direct mapping vs. fully asssociative vs. set associative),
 the main difference is seen in total cycle count. 
     For (write-allocate + write-back) & lru, direct-mapping had about 2 million more total cycles than associative mapping. 
     For (write-allocate + write-through) & lru, direct mapping had over 1.3 million more total cycles than associative mapping.
@@ -171,45 +171,9 @@ We then compared results between write policies, keeping other parameters of eac
                         write-alloc    no-write-alloc
         Load misses:    5959           9089     
         Store misses:   9984           34905
+        high adssoc factor & higher block size gives more effect: miss rate dec, tot cycles inc
 
-^^ DATA for lru, (write-allocate + write-back) vs. (write-allocate + write-through) vs. (no-write-allocate + write-through)
-    fully assoc
-        Load hits: 314973
-        Load misses: 3224
-        Store hits: 188300
-        Store misses: 9186
-        Total cycles: 9756473
-
-        Load hits: 314973
-        Load misses: 3224
-        Store hits: 188300
-        Store misses: 9186
-        Total cycles: 25215873
-
-        Load hits: 311723
-        Load misses: 6474
-        Store hits: 164778
-        Store misses: 32708
-        Total cycles: 22814701
-
-    set assoc
-        Load hits: 314798
-        Load misses: 3399
-        Store hits: 188250
-        Store misses: 9236
-        Total cycles: 9966648
-
-        Load hits: 314798
-        Load misses: 3399
-        Store hits: 188250
-        Store misses: 9236
-        Total cycles: 25305648
-
-        Load hits: 311613
-        Load misses: 6584
-        Store hits: 164819
-        Store misses: 32667
-        Total cycles: 22858632
+    Therefore, write-back + write-allocate was the most effective combination of write policies.
 
 
 We did further comparisons of results for lru vs. fifo eviction.
@@ -228,23 +192,30 @@ a set-associative cache that uses write-back + write-allocate and lru eviction.
 
 We performed a final set of experiments to compare effectiveness of different block sizes 
 (using the current most-effective cache configuration).
+
+    Halving block size (doubling # blocks): ./csim 512 4 8 write-allocate write-back lru < gcc.trace
+        Load hits: 313390
+        Load misses: 4807
+        Store hits: 179658
+        Store misses: 17828
+        Total cycles: 8938248
+    Doubling block size (halving # blocks):
+        Load hits: 315689
+        Load misses: 2508
+        Store hits: 192637
+        Store misses: 4849
+        Total cycles: 11622726
+
+    Summarizing:    
                         32          16            8
-        Load misses:   2071         3399         5611
-        Store misses:  4663         9236         18112
-        Total cycles:  10077749     9966648      9696360
-    Decreasing block size increased number of misses but decreased number of cycles.
-    Increasing block size decreased the number of load and store misses. However there was a tradeoff in increased 
-    total cycle count. Therefore, we conclude that changing block size doesn't really matter???
+        Load misses:   2508         3399         4807
+        Store misses:  4849         9236         17828
+        Total cycles:  11622726     9966648      8938248
 
-
-
-**!!!!!!! check below - the overhead analysis might be wrong !!!!!!!**
-
-When considering cache overhead for each configuration, we considered the boolean storing 'dirty' values, 
-as this information is only used with write-back. From this, write-back would require more overhead. However,
-since our cache class contained the same information for all types of classes, there would not be a functional difference
-for the cache simulator????
+    These experiments showed that a smaller block size resulted in fewer total cycles, with a tradeoff
+    in increased store/load misses. Because our goal is to reduce cycle count to improve overall performance, 
+    we conclude that a smaller block size gives a more effective cache.
 
 
 Thus, we conclude that the cache configuration with the best overall effectiveness is 
-a set-associative cache that uses write-back + write-allocate and lru eviction, with possibly varying block sizes.
+a set-associative cache that uses write-back + write-allocate and lru eviction, with smaller (8 byte) block sizes.
