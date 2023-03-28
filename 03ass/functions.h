@@ -3,7 +3,7 @@
  * along with properties to specify cache configuration and statistics.
  * CSF Assignment 3
  * Emily Guan, eguan2
- * Esther Kwon, 
+ * Esther Kwon, kkwon16
  */
 #include <cstdint>
 #include <vector>
@@ -77,7 +77,7 @@ public:
     * CacheSim constructor; initializes stats to 0 and initializes all Blocks in each set
     * 
     * Parameters:
-    *   vals - struct of arguments that specify the cache configuration.
+    *  vals - struct of arguments that specify the cache configuration.
     */
     CacheSim(Args vals);
 
@@ -94,8 +94,8 @@ public:
     * Handles 'l' command; loads block into cache.
     * 
     * Parameters:
-    *  tag - 
-    *  index - 
+    *  tag - tag of the block (block id)
+    *  index - index of the set where the block is located
     */
     void load_block(uint32_t tag, uint32_t index);
 
@@ -103,17 +103,18 @@ public:
     * Handles 's' command; stores block into memory.
     * 
     * Parameters:
-    *  tag - 
-    *  index - 
+    *  tag - tag of the block (block id)
+    *  index - index of the set where the block is located
     */
     void store_block(uint32_t tag, uint32_t index);
 
     /*
     * Handles load/store miss by updating stats and inserting new block.
+    * Handles eviction if cache is full.
     * 
     * Parameters:
-    *  tag - 
-    *  index - 
+    *   tag - tag of the block (block id)
+    *   index - index of the set where the block is located
     */
     void load_miss(uint32_t tag, uint32_t index); 
 

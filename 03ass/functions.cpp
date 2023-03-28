@@ -1,3 +1,9 @@
+/*
+ * Implementation of CacheSim, which mimics loads, stores, and cycles of a cache.
+ * CSF Assignment 3
+ * Emily Guan, eguan2
+ * Esther Kwon, kkwon16
+*/
 #include "functions.h"
 #include <iostream>
 #include <fstream>
@@ -10,7 +16,6 @@
 #include <cmath>
 #include <string.h>
 
-using std::map;
 using std::pair;
 using std::cout;
 using std::string;
@@ -18,15 +23,13 @@ using std::endl;
 
 // Constructor
 CacheSim::CacheSim(Args vals) {  
+    // initialize values that specify configuration
     this->vals = vals;
-    num_reads = 0;
-    num_writes = 0;
     cycle_count = 0;
 
     // initialize all the blocks within each set
     for (int k = 0; k < vals.num_sets; k++) {
         Set s;
-        //s.filled_count = 0;
         for (int i = 0; i < vals.num_blocks_in_set; i++) {
             Block block;
             s.blocks.push_back(block);
@@ -49,13 +52,13 @@ void CacheSim::simulate(char command, uint32_t address) {
 
     if (command == 'l') {
         this->stat.tot_loads++;
-        load_block(tag, index);
+        load_block(tag, index); // load block into cache
     }  else if (command == 's') {
         this->stat.tot_stores++;
         if (this->vals.write_thru) { // write-through store writes to the cache as well as to memory
             stat.tot_cycles += 100;
         }
-        store_block(tag, index);
+        store_block(tag, index); // call store block
     }
     this->cycle_count++; // increment count for each line of trace file
 }
@@ -98,7 +101,7 @@ void CacheSim::store_block(uint32_t tag, uint32_t index) {
 void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     this->stat.tot_cycles += ((this->vals.bytes/4) * 100); // update cycle for the miss - add the one for cycle count
 
-    bool full_set = true;
+    bool full_set = true; // initially, set flag to true
     vector<Block> *cur_set = &this->sets.at(index).blocks; // get the set at given index
 
     int new_idx = 0;
@@ -107,7 +110,7 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
     for (int k = 0; k < vals.num_blocks_in_set; k++) { 
         if (!cur_set->at(k).valid) { // found an empty block to replace
             new_idx = k; // return the index and break out of the function
-            full_set = false;
+            full_set = false; // set is not full
             break;
         }
     }
@@ -134,14 +137,14 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
 int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks and check the time stamp to see which block to evict
     int evict_idx = 0; // index of the block with lowest time stamp
     vector<Block> *cur_set = &this->sets.at(index).blocks;
-
-    if (this->vals.lru_state) { // compare timestamp depending on eviction type
+    // compare timestamp depending on eviction type
+    if (this->vals.lru_state) { // lru eviction
         for (int i = 1; i < vals.num_blocks_in_set; i++) {
             if (cur_set->at(i).time_lru < cur_set->at(evict_idx).time_lru) { // iterate through and find the block with lowest time stamp
                 evict_idx = i; // replace index if a lower timestamp is found
             }
         }
-    } else {
+    } else { // fifo eviction
         for (int j = 1; j < vals.num_blocks_in_set; j++) {
             if (cur_set->at(j).time_fifo < cur_set->at(evict_idx).time_fifo) {
                 evict_idx = j;

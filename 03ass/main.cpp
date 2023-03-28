@@ -1,3 +1,10 @@
+/*
+ * Main method; handles input validation, parses trace files from stdin, runs cache simulator
+ * CSF Assignment 3
+ * Emily Guan, eguan2
+ * Esther Kwon, kkwon16
+ */
+ 
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -149,8 +156,6 @@ int main(int argc, char* argv[]) {
 
     // parse each line in trace file; convert address to hexadecimal
     while (cin >> command >> std::hex >> address >> third) {
-        // cout << "address: " << address << "\n";
-        // cout << "command: " << command << "\n";
         cache.simulate(command, address);
     }
 
