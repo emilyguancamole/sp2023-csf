@@ -1,8 +1,12 @@
 Esther Kwon, Emily Guan
+We worked on all the functions equally and went to office hours together. Met in person to write the code together.
+For running the tests, we divided it up into finding the best write policy (write-allocate + write-back) & associativity
+and lru/fifo & block size. Emily completed the first parts and Esther completed the latter half - discussed our results
+together at the end to finalize.
 
 To determine the cache configuration with the best overall effectiveness, we ran experiments with the gcc.trace
 file for each possible cache configuration. That is, we tested direct-mapped, fully associative, and set associative
-configurations. 
+configurations.
 
 We tested write policies: (write-allocate + write-back), (write-allocate + write-through), and 
 (no-write-allocate + write-through) for each configuration.
