@@ -97,12 +97,33 @@ public:
     void load_miss(uint32_t tag, uint32_t index);
     //void load_block(uint32_t tag, uint32_t index); 
 
-    int find_load_idx(uint32_t tag, uint32_t index);
-    
+    /*
+    * Finds the index of the block to evict from the cache.
+    *
+    * Parameters:
+    *   index - index of the set where the block is located
+    * Returns:
+    *   index of the block to evict (integer)
+    */
     int evict_block(uint32_t index);
 
+    /*
+    * Checks if a block exists in the cache.
+    *
+    * Parameters: 
+    *   tag - tag of the block (block id)
+    *   index - index of the set where the block is located
+    * Returns: 
+    *   true if block exists, false otherwise
+    */
     bool block_exists(uint32_t tag, uint32_t index);
-
+    
+    /*
+    * Prints out the statistics of the cache simulation.
+    *
+    * Parameters: none
+    * Returns: none
+    */
     void print_stats();
 
 };
