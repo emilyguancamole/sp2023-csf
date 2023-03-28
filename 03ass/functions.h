@@ -77,7 +77,7 @@ public:
     * CacheSim constructor; initializes stats to 0 and initializes all Blocks in each set
     * 
     * Parameters:
-    *   vals - 
+    *   vals - struct of arguments that specify the cache configuration.
     */
     CacheSim(Args vals);
 
@@ -90,12 +90,32 @@ public:
     */
     void simulate(char command, uint32_t address);
 
+    /*
+    * Handles 'l' command; loads block into cache.
+    * 
+    * Parameters:
+    *  tag - 
+    *  index - 
+    */
     void load_block(uint32_t tag, uint32_t index);
 
+    /*
+    * Handles 's' command; stores block into memory.
+    * 
+    * Parameters:
+    *  tag - 
+    *  index - 
+    */
     void store_block(uint32_t tag, uint32_t index);
 
-    void load_miss(uint32_t tag, uint32_t index);
-    //void load_block(uint32_t tag, uint32_t index); 
+    /*
+    * Handles load/store miss by updating stats and inserting new block.
+    * 
+    * Parameters:
+    *  tag - 
+    *  index - 
+    */
+    void load_miss(uint32_t tag, uint32_t index); 
 
     int find_load_idx(uint32_t tag, uint32_t index);
     
