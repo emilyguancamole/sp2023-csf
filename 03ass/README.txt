@@ -223,7 +223,7 @@ We did further comparisons of results for lru vs. fifo eviction.
     The differences are not as significant as those seen when changing write policies. 
 
 
-From our experiments and analysis, we see that the cache configuration with the best overall effectiveness is 
+From these experiments and analysis, we see that the most effective cache configuration is 
 a set-associative cache that uses write-back + write-allocate and lru eviction.
 
 We performed a final set of experiments to compare effectiveness of different block sizes 
@@ -238,15 +238,13 @@ We performed a final set of experiments to compare effectiveness of different bl
 
 
 
-
-
-
-  **!!!!!!! check below - the overhead analysis might be wrong !!!!!!!**
-
-
+**!!!!!!! check below - the overhead analysis might be wrong !!!!!!!**
 
 When considering cache overhead for each configuration, we considered the boolean storing 'dirty' values, 
 as this information is only used with write-back. From this, write-back would require more overhead. However,
 since our cache class contained the same information for all types of classes, there would not be a functional difference
-for the cache simulator.
+for the cache simulator????
 
+
+Thus, we conclude that the cache configuration with the best overall effectiveness is 
+a set-associative cache that uses write-back + write-allocate and lru eviction, with possibly varying block sizes.
