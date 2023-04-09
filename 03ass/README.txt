@@ -12,11 +12,11 @@ We tested write policies: (write-allocate + write-back), (write-allocate + write
 (no-write-allocate + write-through) for each configuration.
 
 For each combination of configuration and the above parameters, we repeated the tests with lru and fifo 
-(fifo was not done with direct-mapping, as eviction type does not matter and would ).
+(fifo was not done with direct-mapping, as eviction type does not matter).
 
 The number of sets and blocks per set were changed to alter the cache configuration 
 (i.e. direct-map has n sets of 1 block, fully associative cache has 1 set of n blocks).
-However, the total cache capacity was kept at 2^10=1024. Each block consistently contained 16 bytes of memory.
+However, the total cache capacity was kept at 2^14 = 16,384 bytes. Each block consistently contained 16 bytes of memory.
 
 ***** EXPERIMENTS *****
 The commands to simulate each experiment, along with results, are summarized below.
@@ -25,8 +25,6 @@ The commands to simulate each experiment, along with results, are summarized bel
 ** lru **
 Direct-mapped (1 block per set):
 ./csim 1024 1 16 write-allocate write-back lru < gcc.trace
-    Total loads: 318197
-    Total stores: 197486
     Load hits: 312238
     Load misses: 5959
     Store hits: 187502
@@ -34,8 +32,6 @@ Direct-mapped (1 block per set):
     Total cycles: 12626940
 Fully associative (1 set):
 ./csim 1 1024 16 write-allocate write-back lru < gcc.trace
-    Total loads: 318197
-    Total stores: 197486
     Load hits: 314973
     Load misses: 3224
     Store hits: 188300
@@ -43,8 +39,6 @@ Fully associative (1 set):
     Total cycles: 9756473
 Set-associative (256 sets, 4 blocks each):
 ./csim 256 4 16 write-allocate write-back lru < gcc.trace
-    Total loads: 318197
-    Total stores: 197486
     Load hits: 314798
     Load misses: 3399
     Store hits: 188250
@@ -53,8 +47,6 @@ Set-associative (256 sets, 4 blocks each):
 ** fifo **
 Fully associative:
 ./csim 1 1024 16 write-allocate write-back fifo < gcc.trace
-    Total loads: 318197
-    Total stores: 197486
     Load hits: 314311
     Load misses: 3886
     Store hits: 188117
@@ -62,8 +54,6 @@ Fully associative:
     Total cycles: 10419228
 Set-associative:
 ./csim 256 4 16 write-allocate write-back fifo < gcc.trace
-    Total loads: 318197
-    Total stores: 197486
     Load hits: 314171
     Load misses: 4026
     Store hits: 188047
@@ -80,7 +70,6 @@ Direct-mapped:
     Store hits: 187502
     Store misses: 9984
     Total cycles: 26625540
-
 Fully associative:
 ./csim 1 1024 16 write-allocate write-through lru < gcc.trace
     Load hits: 314973
@@ -135,12 +124,14 @@ Set-associative:
     Total cycles: 22858632
 ** fifo **
 Fully associative:
+./csim 1 1024 16 no-write-allocate write-through fifo < gcc.trace
     Load hits: 311160
     Load misses: 7037
     Store hits: 164196
     Store misses: 33290
     Total cycles: 23038756
 Set-associative:
+./csim 256 4 16 no-write-allocate write-through fifo < gcc.trace
     Load hits: 311017
     Load misses: 7180
     Store hits: 163705
@@ -161,6 +152,10 @@ the main difference is seen in total cycle count.
     This analysis is generally true for both lru and fifo eviction. However, we did notice that differences
     in total cycles for fifo eviction were smaller than those for lru eviction. The smallest of these 
     differences was seen in (no-write-allocate + write-through): direct mapping had about 800 thousand more cycles.
+    From this experiment, we can conclude that set-associative mapping is the most effective as it balances the advantages
+    of direct mapping and fully associative mapping, reducing the likelihood of cache conflicts and improving cache hit rates.
+    Although the total cycle count is smaller for fully associative mapping, this method is not feasible in real life
+    due to its high hardware requirements, increased latency, and difficulty in managing large amount of data.
 
 
 We then compared results between write policies, keeping other parameters of each cache constant. 
@@ -197,13 +192,15 @@ a set-associative cache that uses write-back + write-allocate and lru eviction.
 We performed a final set of experiments to compare effectiveness of different block sizes 
 (using the current most-effective cache configuration).
 
-    Halving block size (doubling # blocks): ./csim 512 4 8 write-allocate write-back lru < gcc.trace
+    Halving block size (doubling # blocks): 
+    ./csim 512 4 8 write-allocate write-back lru < gcc.trace
         Load hits: 313390
         Load misses: 4807
         Store hits: 179658
         Store misses: 17828
         Total cycles: 8938248
-    Doubling block size (halving # blocks):
+    Doubling block size (halving # blocks): 
+    ./csim 128 4 32 write-allocate write-back lru < gcc.trace
         Load hits: 315689
         Load misses: 2508
         Store hits: 192637
@@ -216,10 +213,45 @@ We performed a final set of experiments to compare effectiveness of different bl
         Store misses:  4849         9236         17828
         Total cycles:  11622726     9966648      8938248
 
-    These experiments showed that a smaller block size resulted in fewer total cycles, with a tradeoff
-    in increased store/load misses. Because our goal is to reduce cycle count to improve overall performance, 
-    we conclude that a smaller block size gives a more effective cache.
+    These experiments showed that a smaller block size with greater number of sets resulted in fewer total cycles,
+    with a tradeoff in increased store/load misses. Because our goal is to reduce cycle count to improve overall 
+    performance, we conclude that a smaller block size gives a more effective cache.
 
 
 Thus, we conclude that the cache configuration with the best overall effectiveness is 
-a set-associative cache that uses write-back + write-allocate and lru eviction, with smaller (8 byte) block sizes.
+a set-associative cache that uses write-back + write-allocate and lru eviction, with smaller (8 byte) block sizes for greater
+number of sets.
+
+Given the set cache size of 16,384 bytes, the most effective configuration is:
+    512 4 8 write-allocate write-back lru
+
+***** Additional Analysis *****
+    If we don't keep the cache size constant, we found out that increasing the size of cache will increase cache efficiency.
+
+    Halving the cache size (8,192):
+    ./csim 256 4 8 write-allocate write-back lru < gcc.trace
+        Load hits: 312586
+        Load misses: 5611
+        Store hits: 179374
+        Store misses: 18112
+        Total cycles: 9696360
+    Oritinal cache size (16,384):
+    ./csim 512 4 8 write-allocate write-back lru < gcc.trace
+        Load hits: 313390
+        Load misses: 4807
+        Store hits: 179658
+        Store misses: 17828
+        Total cycles: 8938248
+    Doubling cache size (32,768):
+    ./csim 1024 4 8 write-allocate write-back lru < gcc.trace
+        Load hits: 313804
+        Load misses: 4393
+        Store hits: 179909
+        Store misses: 17577
+        Total cycles: 8153313
+
+    From the experiment above, we can see that increasing the cache size by increasing the number of sets decreases the
+    total cycle as the number of misses decreases (there is more data in the cache).
+
+
+

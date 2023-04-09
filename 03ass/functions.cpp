@@ -50,10 +50,15 @@ void CacheSim::simulate(char command, uint32_t address) {
     }
     uint32_t tag = address >> (index_size + offset_size); // get tag
 
-    if (command == 'l') {
+    if (command == 'l') { // deal with load
         this->stat.tot_loads++;
+<<<<<<< HEAD
         load_block(tag, index); // load block into cache
     }  else if (command == 's') {
+=======
+        load_block(tag, index);
+    }  else if (command == 's') { // deal with store
+>>>>>>> b68eb3fb17545ecbc8ded90b5ca8d71b6937af3a
         this->stat.tot_stores++;
         if (this->vals.write_thru) { // write-through store writes to the cache as well as to memory
             stat.tot_cycles += 100;
@@ -137,8 +142,14 @@ void CacheSim::load_miss(uint32_t tag, uint32_t index) {
 int CacheSim::evict_block(uint32_t index) { // iterate through all the blocks and check the time stamp to see which block to evict
     int evict_idx = 0; // index of the block with lowest time stamp
     vector<Block> *cur_set = &this->sets.at(index).blocks;
+<<<<<<< HEAD
     // compare timestamp depending on eviction type
     if (this->vals.lru_state) { // lru eviction
+=======
+
+    // compare timestamp depending on eviction type
+    if (this->vals.lru_state) { 
+>>>>>>> b68eb3fb17545ecbc8ded90b5ca8d71b6937af3a
         for (int i = 1; i < vals.num_blocks_in_set; i++) {
             if (cur_set->at(i).time_lru < cur_set->at(evict_idx).time_lru) { // iterate through and find the block with lowest time stamp
                 evict_idx = i; // replace index if a lower timestamp is found
