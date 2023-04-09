@@ -46,11 +46,11 @@ void merge(int64_t *arr, size_t begin, size_t mid, size_t end, int64_t *temparr)
 }
 
 void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
-  // TODO: implement
   int64_t mid = (end + begin) / 2;
   // if number of elements is <= threshold, sort sequentially
-  if ((end - begin) + 1 <= threshold) { //?
-    qsort(arr, end-begin, sizeof(int64_t), compare_i64); // using comparator
+  if ((end - begin) <= threshold) { //?? + 1
+    qsort(arr+begin, end-begin, sizeof(int64_t), compare_i64); // using comparator
+    return;
   } else {
     // child process for left half
     pid_t pid_l = fork();
@@ -59,6 +59,18 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
       exit(-1);
     } else if (pid_l == 0) { // now in the child process
       merge_sort(arr, begin, mid, threshold); // sort left half
+      exit(0); // exit child process
+    }
+
+    
+
+    // child process for right half
+    pid_t pid_r = fork();
+    if (pid_r == -1) {
+      fprintf(stderr, "Error: fork failed to start a new process\n");
+      exit(-1);
+    } else if (pid_r == 0) { // now in the child process
+      merge_sort(arr, mid, end, threshold); // sort right half
       exit(0); // exit child process
     }
 
@@ -79,16 +91,6 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
       exit(-1);
     }
 
-    // child process for right half
-    pid_t pid_r = fork();
-    if (pid_r == -1) {
-      fprintf(stderr, "Error: fork failed to start a new process\n");
-      exit(-1);
-    } else if (pid_r == 0) { // now in the child process
-      merge_sort(arr, mid+1, end, threshold); // sort right half
-      exit(0); // exit child process
-    }
-
     // wait for right child process to complete
     int wstatus_r;
     pid_t actual_pid_r = waitpid(pid_r, &wstatus_r, 0);
@@ -104,16 +106,17 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
       fprintf(stderr, "Error: subprocess returned a non-zero exit code\n");
       exit(-1);
     }
+    // merge the sorted left and right halves together
+    int64_t* temparr = (int64_t*) malloc((end-begin) * sizeof(int64_t)); // create a temp array on the heap
+    merge(arr, begin, mid, end, temparr); // merge left and right into temparr
+    for (int64_t i = begin; i < end; i++) {
+      arr[i] = temparr[i-begin];
+    }
+    free(temparr);
+    
   }
 
-
-  // merge the sorted left and right halves together
-  int64_t temparr[end - begin + 1];
-  merge(arr, begin, mid, end, temparr); // merge left and right into temparr
-  // copy everything over
-  for (int64_t i = 0; i < (end - begin); i++) {
-    arr[i] = temparr[i];
-  }
+  
 }
 
 int main(int argc, char **argv) {
@@ -155,6 +158,7 @@ int main(int argc, char **argv) {
   }
   // sort the data!
   merge_sort(data, 0, file_size_in_bytes/sizeof(int64_t), threshold);
+  //merge_sort1(data, 0, file_size_in_bytes/sizeof(int64_t), threshold);
 
   // unmap data
   int64_t unmapped = munmap(data, file_size_in_bytes);
@@ -172,4 +176,3 @@ int main(int argc, char **argv) {
   // exit with a 0 exit code if sort was successful
   return 0;
 }
-
