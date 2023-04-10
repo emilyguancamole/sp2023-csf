@@ -62,8 +62,6 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
       exit(0); // exit child process
     }
 
-    
-
     // child process for right half
     pid_t pid_r = fork();
     if (pid_r == -1) {
@@ -106,17 +104,16 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
       fprintf(stderr, "Error: subprocess returned a non-zero exit code\n");
       exit(-1);
     }
-    // merge the sorted left and right halves together
-    int64_t* temparr = (int64_t*) malloc((end-begin) * sizeof(int64_t)); // create a temp array on the heap
-    merge(arr, begin, mid, end, temparr); // merge left and right into temparr
-    for (int64_t i = begin; i < end; i++) {
-      arr[i] = temparr[i-begin];
-    }
-    free(temparr);
     
   }
 
-  
+  // merge the sorted left and right halves together
+  int64_t* temparr = (int64_t*) malloc((end-begin) * sizeof(int64_t)); // create a temp array on the heap
+  merge(arr, begin, mid, end, temparr); // merge left and right into temparr
+  for (int64_t i = begin; i < end; i++) {
+    arr[i] = temparr[i-begin];
+  }
+  free(temparr);
 }
 
 int main(int argc, char **argv) {
