@@ -66,13 +66,13 @@ void merge_sort(int64_t *arr, size_t begin, size_t end, size_t threshold) {
     pid_t pid_r = fork();
     if (pid_r == -1) {
       fprintf(stderr, "Error: fork failed to start a new process\n");
+      pid_t actual_pid_l = waitpid(pid_l, NULL, 0); // pick up the left child process to prevent leak
       exit(-1);
     } else if (pid_r == 0) { // now in the child process
       merge_sort(arr, mid, end, threshold); // sort right half
       exit(0); // exit child process
     }
 
-    //?? HOW DOES IT KNOW TO WAIT IF WE CALL WAITPID AFTER BOTH FORKS
     // wait for left child process to complete
     int wstatus_l;
     pid_t actual_pid_l = waitpid(pid_l, &wstatus_l, 0); 
