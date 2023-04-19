@@ -27,6 +27,10 @@ int main(int argc, char **argv) {
 
   // TODO: loop reading commands from user, sending messages to
   //       server as appropriate
+  bool quitted;
+  while(!quitted) {
+    //if input is /quit, hasquit = true
+  }
 
   return 0;
 }
