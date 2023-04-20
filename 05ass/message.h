@@ -34,9 +34,7 @@ struct Message {
     return formatted_data;
   }
   
-  string to_string() const {
-    return tag + ":" + data;
-  }
+
 };
 
 // standard message tags (note that you don't need to worry about

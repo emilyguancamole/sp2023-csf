@@ -77,7 +77,7 @@ bool Connection::send(const Message &msg) {
   
   const char* msg_cstr = msgstr.c_str();
   ssize_t msg_size = strlen(msg_cstr);
-  ssize_t msg_size_sent = rio_writen(m_fd, msg_cstr, msg_size); // call rio_writen to send
+  ssize_t msg_size_sent = rio_writen(m_fd, msg_cstr, strlen(msg_cstr)); // call rio_writen to send
 
   // check if message was sent successfully - entire message sent
   if (msg_size == msg_size_sent) {
@@ -113,13 +113,15 @@ bool Connection::receive(Message &msg) {
   return true;
 }
 
-void Connection::checkResponse (Message &msg) { //?? should we have 2 sep functions to send and receive?
+bool Connection::checkResponse (Message &msg) { //?? should we have 2 sep functions to send and receive?
   // send message and check
   if (!send(msg)) {
-    throw std::runtime_error(msg.data.c_str());
+    return false;
   }
   // receive message and check
   if (!receive(msg) || msg.tag == TAG_ERR) {
-    throw std::runtime_error(msg.data.c_str());
+    return false;
   }
+
+  return true;
 }

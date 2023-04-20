@@ -45,7 +45,7 @@ public:
   Result get_last_result() const { return m_last_result; }
 
   //* added helper that sends and receives message, and checks that server response is OK
-  void checkResponse (Message &msg);
+  bool checkResponse (Message &msg);
 
 private:
   // prohibit value semantics

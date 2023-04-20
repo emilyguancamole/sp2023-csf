@@ -59,20 +59,17 @@ int main(int argc, char **argv) {
   }
 
   // TODO: send rlogin and join messages (expect a response from the server for each one)
-  try {
-    Message rlog_message = Message(TAG_RLOGIN, username);
-    conn.checkResponse(rlog_message);
-  } catch (std::runtime_error &e) {
+  Message rlog_message = Message(TAG_RLOGIN, username);
+  // if send or receive is bad, return error
+  if (!conn.checkResponse(rlog_message)) {
     cerr << "Error: invalid send for rlogin:" << username << endl;
     conn.close();
     return 1;
   }
 
   // send join message
-  try {
-    Message join_message = Message(TAG_JOIN, room_name);
-    conn.checkResponse(join_message);
-  } catch (std::runtime_error &e) {
+  Message join_message = Message(TAG_JOIN, room_name);
+  if (!conn.checkResponse(join_message)) {
     cerr << "Error: invalid send for join:" << room_name << endl;
     conn.close();
     return 1;
@@ -81,7 +78,6 @@ int main(int argc, char **argv) {
   // TODO: loop waiting for messages from server
   //       (which should be tagged with TAG_DELIVERY)
   Message msg;
-  //conn.checkResponse(msg);
   chatloop(conn, msg, room_name); // helper for the loop
 
   conn.close(); // close everything at the end
