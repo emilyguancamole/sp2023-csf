@@ -17,7 +17,7 @@ bool chatloop(Connection &conn, Message &msg, string room) {
 
     if (msg.tag != TAG_DELIVERY) {
       cerr << "Failed to receive delivery message" << endl;
-      continue; //? do we do this to 'wait for next message' ? or return?
+      continue; // continue to next message
     }
 
     // make sure message payload is in correct format (room:sender:message_text) and parse message
@@ -26,9 +26,9 @@ bool chatloop(Connection &conn, Message &msg, string room) {
       cerr << "Error: invalid message format" << endl;
       return false;
     }
-    cout << in_msg[1] << ": " << in_msg[2]; 
+    cout << in_msg[1] << ": " << in_msg[2]; // print sender and message
 
-    // todo: check to make sure if message's room matches
+    // check to make sure if message's room matches
     if (in_msg[0] != room) {
       cerr << "Error: room does not match receiver" << endl;
       return false;
@@ -51,18 +51,17 @@ int main(int argc, char **argv) {
 
   Connection conn;
 
-  // TODO: connect to server
+  // connect to server
   conn.connect(server_hostname, server_port);
   if (!conn.is_open()) {
     cerr << "Error: connection failed" << endl;
     return 1;
   }
 
-  // TODO: send rlogin and join messages (expect a response from the server for each one)
+  // send rlogin and join messages (expect a response from the server for each one)
   Message rlog_message = Message(TAG_RLOGIN, username);
   // if send or receive is bad, return error
   if (!conn.checkResponse(rlog_message)) {
-    //cerr << rlog_message.data;
     conn.close();
     return 1;
   }
@@ -70,13 +69,11 @@ int main(int argc, char **argv) {
   // send join message
   Message join_message = Message(TAG_JOIN, room_name);
   if (!conn.checkResponse(join_message)) {
-    //cerr << join_message.data;
     conn.close();
     return 1;
   }
   
-  // TODO: loop waiting for messages from server
-  //       (which should be tagged with TAG_DELIVERY)
+  // loop waiting for messages from server (which should be tagged with TAG_DELIVERY)
   Message msg;
   chatloop(conn, msg, room_name); // helper for the loop
 

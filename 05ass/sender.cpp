@@ -17,8 +17,8 @@ void read_cmd_loop(Connection& conn) {
     std::getline(std::cin, input);
     
     Message msg;
-    if (input.at(0) == '/') { // a command
-      if (input.find("/join") == 0) {
+    if (input.at(0) == '/') { // check that it's a command
+      if (input.find("/join") == 0) { // create messages accordingly
         std::string room_num = input.substr(6);
         msg = Message(TAG_JOIN, room_num);
       } else if (input.find("/leave") == 0) {
@@ -35,7 +35,7 @@ void read_cmd_loop(Connection& conn) {
     }
 
     if(!conn.checkResponse(msg)) { // sends message
-      continue; // leave
+      continue; // deal with error and continue
     } 
   }
 }
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   server_port = std::stoi(argv[2]);
   username = argv[3];
 
-  // TODO: connect to server
+  // connect to server
   Connection conn;
   conn.connect(server_hostname, server_port);
   if (!conn.is_open()) {
@@ -61,15 +61,14 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // TODO: send slogin message
+  // send slogin message
   Message msg(TAG_SLOGIN, username);
   if (!conn.checkResponse(msg)) {
-    //cerr << msg.data; 
     conn.close();
     return 1;
   }
 
-  // TODO: loop reading commands from user, sending messages to server as appropriate
+  // loop reading commands from user, sending messages to server as appropriate
   read_cmd_loop(conn);
 
   conn.close();
