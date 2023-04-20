@@ -62,18 +62,20 @@ void Connection::close() {
 }
 
 bool Connection::send(const Message &msg) {
-  // TODO: send a message
-  // return true if successful, false if not. make sure that m_last_result is set appropriately
+  // TODO: send a message. return true if successful, false if not. make sure that m_last_result is set appropriately
 
-  // check the length of the message data
+  // check the validity of the message data
   if (msg.data.length() > Message::MAX_LEN) {
     //cerr << "Error: message data too long" << endl; //?? print error message
     m_last_result = INVALID_MSG;
     return false;
   }
-
+  if (msg.tag.length() == 0) {
+    m_last_result = INVALID_MSG;
+    return false;
+  }
   // FORMAT the message into string, convert to cstring - to be displayed
-  string msgstr = msg.tag + ":" + msg.data + "\n"; //! this prob fucked sm up bc reading in delivery is consuming the first input
+  string msgstr = msg.tag + ":" + msg.data + "\n"; 
   
   const char* msg_cstr = msgstr.c_str();
   ssize_t msg_size = strlen(msg_cstr);
@@ -115,13 +117,19 @@ bool Connection::receive(Message &msg) {
 
 bool Connection::checkResponse (Message &msg) { //?? should we have 2 sep functions to send and receive?
   // send message and check
-  if (!send(msg)) {
+  if (!send(msg)) { // msg is the message to send to server
+    cerr << msg.data;
     return false;
   }
-  // receive message and check
-  if (!receive(msg) || msg.tag == TAG_ERR) {
+  // the send was successful! now we receive message and check
+  // msg is now the RECEIVED message from server
+  if (!receive(msg) || msg.tag == TAG_ERR) { // if didn't receive or tag error, then return false to print payload in caller
+    cerr << msg.data;
     return false;
-  }
+  } else if (msg.tag != TAG_OK) { // print out custom error
+    cerr << "Error: request did not run to completion" << endl;
+    return false;
+  } 
 
   return true;
 }

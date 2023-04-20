@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   Message rlog_message = Message(TAG_RLOGIN, username);
   // if send or receive is bad, return error
   if (!conn.checkResponse(rlog_message)) {
-    cerr << "Error: invalid send for rlogin:" << username << endl;
+    //cerr << rlog_message.data;
     conn.close();
     return 1;
   }
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
   // send join message
   Message join_message = Message(TAG_JOIN, room_name);
   if (!conn.checkResponse(join_message)) {
-    cerr << "Error: invalid send for join:" << room_name << endl;
+    //cerr << join_message.data;
     conn.close();
     return 1;
   }
