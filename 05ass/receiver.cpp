@@ -33,7 +33,6 @@ bool chatloop(Connection &conn, Message &msg, string room) {
       cerr << "Error: room does not match receiver" << endl;
       return false;
     }
-    
   }
   return true;
 }

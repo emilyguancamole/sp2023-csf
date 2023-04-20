@@ -20,7 +20,7 @@ Connection::Connection()
 Connection::Connection(int fd)
   : m_fd(fd)
   , m_last_result(SUCCESS) {
-  // TODO: call rio_readinitb to initialize the rio_t object
+  // call rio_readinitb to initialize the rio_t object
   rio_readinitb(&m_fdbuf, m_fd);
 }
 
@@ -37,7 +37,7 @@ void Connection::connect(const std::string &hostname, int port) {
   }
 
   // call rio_readinitb to initialize the rio_t object
-  rio_readinitb(&m_fdbuf, m_fd); //?? connect client with ?m_fdbuf?????
+  rio_readinitb(&m_fdbuf, m_fd);
 }
 
 Connection::~Connection() {
@@ -62,7 +62,7 @@ void Connection::close() {
 }
 
 bool Connection::send(const Message &msg) {
-  // send a message. return true if successful, false if not. make sure that m_last_result is set appropriately
+  // send a message. Return true if successful, false if not. Set m_last_result appropriately
 
   // check the validity of the message data by checking length
   if (msg.data.length() > Message::MAX_LEN) {
@@ -123,7 +123,7 @@ bool Connection::checkResponse (Message &msg) {
     return false;
   }
   // the send was successful! now we receive message and check
-  // msg is now the RECEIVED message from server
+  // msg is now the received message from server
   if (!receive(msg) || msg.tag == TAG_ERR) { // if didn't receive or tag error, then return false to print payload in caller
     cerr << msg.data;
     return false;
