@@ -33,9 +33,11 @@ int main(int argc, char **argv) {
   }
 
   // TODO: send slogin message
-  Message msg(TAG_SLOGIN, username);
-  if (!conn.checkResponse(msg)) {
-    cerr << msg.data << endl; //?? how to format errors... payload?  or custom "failed to send slogin message"
+  try {
+    Message msg = Message (TAG_SLOGIN, username);
+    conn.checkResponse(msg);
+  } catch (std::runtime_error &e) {
+    cerr << "Error: failed to send slogin message" << endl;
     conn.close();
     return 1;
   }
@@ -46,13 +48,12 @@ int main(int argc, char **argv) {
   while(!quitted) {
     std::string input;
     std::getline(std::cin, input);
-    std::string token = input.substr(0, input.find(" ")); // get the first word, which is the command
+    //std::string token = input.substr(0, input.find(" ")); // get the first word, which is the command
 
     Message msg;
 
-    if (token == "/join ") {
-      std::string room_num = input.substr(input.find(" "));
-      msg = Message(TAG_JOIN, room_num);
+    if (input.substr(0, 6) == "/join ") {
+      msg = Message(TAG_JOIN, input.substr(6));
       //if (!conn.checkResponse) { // if pass conn as pointer, use ->
         // error msg.data
       //}
@@ -63,18 +64,27 @@ int main(int argc, char **argv) {
       msg = Message(TAG_QUIT, "bye");
       quitted = true;
       // same checkresponse
-
-    } else if (token.at(0)) { //?? All other commands should be rejected with an error message printed to stderr/cerr
-      cerr << "Invalid command" << endl;
+      
+      //conn.checkResponse(msg);
+      //break;
     } else { // sendall
       // same thing: checkrsponse and if error do msg.data
       msg = Message(TAG_SENDALL, input);
     }
+    /* else if (token.at(0)) { //?? All other commands should be rejected with an error message printed to stderr/cerr
+      cerr << "Invalid command" << endl; */
 
-    if(!conn.checkResponse(msg)) { // sends message
-      cerr << msg.data << endl;
+    if (!conn.send(msg)) {
+      cerr << "Error: failed to send message" << endl;
       conn.close();
       return 1;
+    }
+
+    try {
+      conn.checkResponse(msg);
+    } catch (std::runtime_error &e) {
+      cerr << "Error: Runtime Error" << endl;
+      continue;
     }
   }
 
