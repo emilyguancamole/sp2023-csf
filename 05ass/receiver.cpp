@@ -56,13 +56,17 @@ int main(int argc, char **argv) {
 
   // TODO: connect to server
   conn.connect(server_hostname, server_port);
-  // todo: check if !conn.isopen(), error
+  if (!conn.is_open()) {
+    cerr << "Error: connection failed" << endl;
+    return 1;
+  }
 
   // TODO: send rlogin and join messages (expect a response from the server for each one)
   Message rlog_message = Message(TAG_RLOGIN, username);
   // if send or receive is bad, return error
   if (!conn.checkResponse(rlog_message)) {
     cerr << "Error: invalid send for rlogin:" << username << endl;
+    conn.close();
     return 1;
   }
 
@@ -70,7 +74,20 @@ int main(int argc, char **argv) {
   Message join_message = Message(TAG_JOIN, room_name);
   if (!conn.checkResponse(join_message)) {
     cerr << "Error: invalid send for join:" << room_name << endl;
+    conn.close();
     return 1;
+  }
+
+  while (true) {
+    Message msg;
+
+    vector<string> in_msg = msg.format_data();
+    if (in_msg.size() != 3) {
+      cerr << "Error: invalid message format" << endl;
+      return 1;
+    }
+
+    cout << in_msg[1] << ": " << in_msg[2] << endl;
   }
   
   // TODO: loop waiting for messages from server
@@ -79,7 +96,6 @@ int main(int argc, char **argv) {
   chatloop(conn, msg); // helper for the loop
 
   conn.close(); // close everything at the end
-
   return 0;
 }
 

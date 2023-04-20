@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 using std::string;
+using std::vector;
 
 struct Message {
   // An encoded message may have at most this many characters,
@@ -20,7 +21,18 @@ struct Message {
   Message(const std::string &tag, const std::string &data)
     : tag(tag), data(data) { }
 
-  // TODO: you could add helper functions
+  vector<string> format_data() {
+    vector<string> formatted_data;
+    int colon = data.find(':');
+    while (colon != string::npos) {
+      formatted_data.push_back(data.substr(0, colon));
+      data.erase(0, colon+1);
+      colon = data.find(':');
+    }
+    formatted_data.push_back(data);
+    
+    return formatted_data;
+  }
   
 
 };

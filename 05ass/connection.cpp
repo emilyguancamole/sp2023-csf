@@ -35,7 +35,7 @@ void Connection::connect(const std::string &hostname, int port) {
      //* ^ returns a file descriptor (the 'socket') - client socket
     // port > 1024
   if (client_fd < 0) {
-    printf("Error: open_clientfd failed"); // can't connect to server
+    perror("Error: open_clientfd failed"); // can't connect to server
     exit(-1);
   }
   // TODO: call rio_readinitb to initialize the rio_t object
@@ -67,24 +67,26 @@ bool Connection::send(const Message &msg) {
   // return true if successful, false if not
   // make sure that m_last_result is set appropriately
 
+  // check the length of the message data
+  if (msg.data.length() > Message::MAX_LEN) {
+    //cerr << "Error: message data too long" << endl; //?? print error message
+    m_last_result = INVALID_MSG;
+    return false;
+  }
+
   // FORMAT the message into string, convert to cstring
   string msgstr = msg.tag + ":" + msg.data;
+  ssize_t msg_size = msgstr.size();
   const char* msg_cstr = msgstr.c_str();
-  ssize_t client_fd = rio_writen(m_fd, msg_cstr, strlen(msg_cstr)); // call rio_writen to send
+  ssize_t msg_size_sent = rio_writen(m_fd, msg_cstr, strlen(msg_cstr)); // call rio_writen to send
 
-  //?? CHECK ERRORS if open_clientfd returns < 0, print invalid message(??) and return
-  if (client_fd < 0) {
-    cerr << "Error: open_clientfd failed" << endl;
+  // check if message was sent successfully - entire message sent
+  if (msg_size == msg_size_sent) {
+    m_last_result = SUCCESS;
+  } else {
     m_last_result = EOF_OR_ERROR;
     return false;
-  } else if (client_fd == 0) {
-    m_last_result = EOF_OR_ERROR; //?? end of file, or different error? check the errors
-    return false;
-  } else {
-    m_last_result = SUCCESS;
   }
-  
-  return true;
 }
 
 bool Connection::receive(Message &msg) {
@@ -96,14 +98,8 @@ bool Connection::receive(Message &msg) {
   // read message from m_fdbuf server, store in buf, read up to max_len
   ssize_t readlen = rio_readlineb(&m_fdbuf, buf, sizeof(buf)); 
   if (readlen < 0) {
-    cerr << "Error: rio_readlineb failed" << endl;
-    m_last_result = EOF_OR_ERROR; //?? when is it invalid message??
-    return false; // error
-  } else if (readlen == 0) { // Interrupted by sig handler return
     m_last_result = EOF_OR_ERROR;
-    return false; // connection closed
-  } else {
-    m_last_result = SUCCESS;
+    return false;
   }
 
   // extract the tag and data from the buffer
@@ -113,12 +109,14 @@ bool Connection::receive(Message &msg) {
   string data = message.substr(colon+1);
   msg = Message(tag, data);
 
+  m_last_result = SUCCESS;
   return true;
 }
 
 bool Connection::checkResponse (Message &msg) { 
   // send message and check
   if (!send(msg)) {
+    // throw error...???
     return false;
   }
   // receive message and check
