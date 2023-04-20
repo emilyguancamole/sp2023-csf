@@ -35,7 +35,7 @@ void read_cmd_loop(Connection& conn) {
     }
 
     if(!conn.checkResponse(msg)) { // sends message
-      return; // leave
+      continue; // leave
     } 
   }
 }
