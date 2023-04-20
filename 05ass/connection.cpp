@@ -113,10 +113,9 @@ bool Connection::receive(Message &msg) {
   return true;
 }
 
-bool Connection::checkResponse (Message &msg) { 
+bool Connection::checkResponse (Message &msg) { //?? should we have 2 sep functions to send and receive?
   // send message and check
   if (!send(msg)) {
-    // throw error...???
     return false;
   }
   // receive message and check

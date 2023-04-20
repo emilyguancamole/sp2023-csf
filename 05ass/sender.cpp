@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   // TODO: send slogin message
   Message msg(TAG_SLOGIN, username);
   if (!conn.checkResponse(msg)) {
-    cerr << "Error: failed to send slogin message" << endl;
+    cerr << "Error: " << msg.data << endl; //?? how to format errors... payload?  or custom "failed to send slogin message"
     conn.close();
     return 1;
   }
@@ -50,14 +50,14 @@ int main(int argc, char **argv) {
 
     Message msg;
 
-    if (input.substr(0, 5) == "/join") {
-      msg = Message(TAG_JOIN, input.substr(6));
+    if (input.substr(0, 6) == "/join ") {
+      msg = Message(TAG_JOIN, input.substr(7));
     } else if (input == "/leave") {
       msg = Message(TAG_LEAVE, "left the room");
     } else if (input == "/quit") {
       msg = Message(TAG_QUIT, "bye!");
       quitted = true;
-    } else {
+    } else { //?? All other commands should be rejected with an error message printed to stderr/cerr
       msg = Message(TAG_SENDALL, input);
     }
 

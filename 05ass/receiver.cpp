@@ -12,7 +12,7 @@ using std::endl;
 using std::cout;
 
 // helper to loop waiting for message from server
-bool chatloop(Connection &conn, Message &msg) {
+bool chatloop(Connection &conn, Message &msg, string room) {
   while (conn.receive(msg)) { // while can still receive
 
     if (msg.tag != TAG_DELIVERY) {
@@ -21,21 +21,19 @@ bool chatloop(Connection &conn, Message &msg) {
       continue; //? do we do this to 'wait for next message' ? or return?
     }
 
-
-    string msg_str = msg.data; // payload of message, format room:sender:message_text
-    // split payload into room, sender, and text
-    int colon = msg_str.find(':'); // position of colon
-    string room = msg_str.substr(0, colon);
-    msg_str.erase(0, colon); // erase room substring
-    string data = msg_str.substr(colon+1);
-    colon = msg_str.find(':'); // position of 2nd colon
-    string sender = msg_str.substr(0, colon);
-    string message_text = msg_str.substr(colon+1); // rest of the string is the actual message text
-
-    // output sender and text
-    cout << sender << ": " << message_text << endl;
+    // make sure message payload is in correct format (room:sender:message_text) and parse message
+    vector<string> in_msg = msg.format_data();
+    if (in_msg.size() != 3) {
+      cerr << "Error: invalid message format" << endl;
+      return false;
+    }
+    cout << in_msg[1] << ": " << in_msg[2] << endl; 
 
     // todo: check to make sure if message's room matches
+    if (in_msg[0] != room) {
+      cerr << "Error: room does not match receiver" << endl;
+      return false;
+    }
     
   }
   return true;
@@ -77,23 +75,11 @@ int main(int argc, char **argv) {
     conn.close();
     return 1;
   }
-
-  while (true) {
-    Message msg;
-
-    vector<string> in_msg = msg.format_data();
-    if (in_msg.size() != 3) {
-      cerr << "Error: invalid message format" << endl;
-      return 1;
-    }
-
-    cout << in_msg[1] << ": " << in_msg[2] << endl;
-  }
   
   // TODO: loop waiting for messages from server
   //       (which should be tagged with TAG_DELIVERY)
   Message msg;
-  chatloop(conn, msg); // helper for the loop
+  chatloop(conn, msg, room_name); // helper for the loop
 
   conn.close(); // close everything at the end
   return 0;
