@@ -17,7 +17,6 @@ bool chatloop(Connection &conn, Message &msg, string room) {
 
     if (msg.tag != TAG_DELIVERY) {
       cerr << "Failed to receive delivery message" << endl;
-      // return 1;
       continue; //? do we do this to 'wait for next message' ? or return?
     }
 
@@ -27,7 +26,7 @@ bool chatloop(Connection &conn, Message &msg, string room) {
       cerr << "Error: invalid message format" << endl;
       return false;
     }
-    cout << in_msg[1] << ": " << in_msg[2] << endl; 
+    cout << in_msg[1] << ": " << in_msg[2]; 
 
     // todo: check to make sure if message's room matches
     if (in_msg[0] != room) {

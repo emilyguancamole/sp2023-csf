@@ -35,34 +35,44 @@ int main(int argc, char **argv) {
   // TODO: send slogin message
   Message msg(TAG_SLOGIN, username);
   if (!conn.checkResponse(msg)) {
-    cerr << "Error: " << msg.data << endl; //?? how to format errors... payload?  or custom "failed to send slogin message"
+    cerr << msg.data << endl; //?? how to format errors... payload?  or custom "failed to send slogin message"
     conn.close();
     return 1;
   }
 
-  // TODO: loop reading commands from user, sending messages to
-  //       server as appropriate
+  // TODO: loop reading commands from user, sending messages to server as appropriate
   bool quitted;
 
   while(!quitted) {
     std::string input;
     std::getline(std::cin, input);
+    std::string token = input.substr(0, input.find(" ")); // get the first word, which is the command
 
     Message msg;
 
-    if (input.substr(0, 6) == "/join ") {
-      msg = Message(TAG_JOIN, input.substr(7));
+    if (token == "/join ") {
+      std::string room_num = input.substr(input.find(" "));
+      msg = Message(TAG_JOIN, room_num);
+      //if (!conn.checkResponse) { // if pass conn as pointer, use ->
+        // error msg.data
+      //}
     } else if (input == "/leave") {
-      msg = Message(TAG_LEAVE, "left the room");
+      msg = Message(TAG_LEAVE, "ignored");
+      // same thing
     } else if (input == "/quit") {
-      msg = Message(TAG_QUIT, "bye!");
+      msg = Message(TAG_QUIT, "bye");
       quitted = true;
-    } else { //?? All other commands should be rejected with an error message printed to stderr/cerr
+      // same checkresponse
+
+    } else if (token.at(0)) { //?? All other commands should be rejected with an error message printed to stderr/cerr
+      cerr << "Invalid command" << endl;
+    } else { // sendall
+      // same thing: checkrsponse and if error do msg.data
       msg = Message(TAG_SENDALL, input);
     }
 
-    if(!conn.checkResponse(msg)) {
-      cerr << "Error: failed to send message" << endl;
+    if(!conn.checkResponse(msg)) { // sends message
+      cerr << msg.data << endl;
       conn.close();
       return 1;
     }
@@ -71,3 +81,4 @@ int main(int argc, char **argv) {
   conn.close();
   return 0;
 }
+
