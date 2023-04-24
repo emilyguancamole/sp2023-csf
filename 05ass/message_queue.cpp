@@ -31,8 +31,20 @@ Message *MessageQueue::dequeue() {
 
   // TODO: call sem_timedwait to wait up to 1 second for a message
   //       to be available, return nullptr if no message is available
+  if (sem_timedwait(&m_avail, &ts) < 0) { //?
+    return nullptr;
+  }
 
   // TODO: remove the next message from the queue, return it
   Message *msg = nullptr;
+  msg = m_messages.front();
+  m_messages.pop_front();
   return msg;
+}
+
+// added helper to get clear queue
+void MessageQueue::clear_queue() {
+  while (!m_messages.empty()) {
+    m_messages.pop_front();
+  }
 }

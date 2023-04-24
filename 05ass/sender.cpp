@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 void read_cmd_loop(Connection& conn) {
-  bool quitted;
+  bool quitted = false;
   while(!quitted) {
     std::string input;
     std::getline(std::cin, input);

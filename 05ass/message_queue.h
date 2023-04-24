@@ -15,7 +15,7 @@ public:
 
   void enqueue(Message *msg); // will not block
   Message *dequeue();         // blocks for at most a finite amount of time
-
+  void clear_queue();
 private:
   // value semantics prohibited
   MessageQueue(const MessageQueue &);
