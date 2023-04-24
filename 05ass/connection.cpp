@@ -23,13 +23,17 @@ Connection::Connection(int fd)
   // call rio_readinitb to initialize the rio_t object
   rio_readinitb(&m_fdbuf, m_fd);
 }
+// ??what is m_fd - file descriptor of the socket (ip addr and port number of a connection). 
+    // m_fd describes the connection between client and server
+// ??what is rio - rio is a buffer that stores data read from the socket
+    // what data is read from the socket? - data sent by client, such as login message, message to be sent.
 
 void Connection::connect(const std::string &hostname, int port) {
   // call open_clientfd to connect to the server
   string port_s = std::to_string(port);
   const char* port_c = port_s.c_str();
   const char* hostname_c = hostname.c_str();
-  m_fd = open_clientfd(hostname_c, port_c); // accepts hostname (server address) and desired port as a string
+  m_fd = open_clientfd(hostname_c, port_c); // accepts hostname (server address) and desired port as string
 
   if (m_fd < 0) {
     perror("Error: open_clientfd failed"); // can't connect to server

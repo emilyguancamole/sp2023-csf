@@ -26,23 +26,65 @@
 
 namespace {
 
+
+void chat_with_receiver(Message& msg); // declaration
+void chat_with_sender(Message& msg);
+
 void *worker(void *arg) {
   pthread_detach(pthread_self());
 
   // TODO: use a static cast to convert arg from a void* to
   //       whatever pointer type describes the object(s) needed
   //       to communicate with a client (sender or receiver)
+  Connection *conn = static_cast<Connection*>(arg);
 
-  // TODO: read login message (should be tagged either with
-  //       TAG_SLOGIN or TAG_RLOGIN), send response
+  // TODO: read login message (should be tagged either with TAG_SLOGIN or TAG_RLOGIN), 
+  //       send response
+  Message login_msg;
+  conn->receive(login_msg); // call receive function, store message in login_msg
+  if (login_msg.tag != TAG_SLOGIN || login_msg.tag != TAG_RLOGIN) {
+    login_msg.tag = TAG_ERR;
+    login_msg.data = "Error: login message has wrong tag";
+  }
+  // send response
+  if (!conn->send(login_msg)) {
+    // ? 
+  }
 
   // TODO: depending on whether the client logged in as a sender or
   //       receiver, communicate with the client (implementing
-  //       separate helper functions for each of these possibilities
-  //       is a good idea)
+  //       separate helper functions for each of these possibilities is a good idea)
+
+  if (login_msg.tag == TAG_RLOGIN) { // receiver
+    chat_with_receiver(login_msg);
+  } else if (login_msg.tag == TAG_SLOGIN) { // receiver
+    chat_with_sender(login_msg);
+  }
 
   return nullptr;
 }
+
+// helper function when client logged in as sender
+void chat_with_receiver(Message& msg) {
+  // register receiver thread with username //?? where does username come up
+  pthread_t thid;
+  void* conn; //???? new connection maybe idk?
+  Pthread_create(&thid, NULL, worker, (void*)conn); // should do error checking itself?
+  void *ret;
+  Pthread_join(thid, &ret); // ret is value returned by exited thread (worker)
+
+  // register receiver to room
+}
+
+// void chat_with_sender(Message& msg) {
+//   // register receiver thread with username
+//   pthread_t thid;
+//   void* conn; //???? new connection maybe idk?
+//   Pthread_create(&thid, NULL, worker, (void*)conn); // should do error checking itself?
+//   void *ret;
+//   Pthread_join(thid, &ret); // ret is value returned by exited thread (worker)
+//   //?? where does username come up
+// }
 
 }
 
