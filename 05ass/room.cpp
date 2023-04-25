@@ -6,22 +6,26 @@
 
 Room::Room(const std::string &room_name)
   : room_name(room_name) {
-  // TODO: initialize the mutex
+  // initialize the mutex
   pthread_mutex_init(&lock, NULL);
 }
 
 Room::~Room() {
-  // TODO: destroy the mutex
+  // destroy the mutex
   pthread_mutex_destroy(&lock);
 }
 
 void Room::add_member(User *user) {
-  // TODO: add User to the room
-  members.insert(user);
+  // check if user is in the room before adding
+  if (!members.count(user)) {
+    Guard guard(lock);
+    members.insert(user);
+  }
 }
 
 void Room::remove_member(User *user) {
-  // TODO: remove User from the room
+  // remove User from the room
+  Guard guard(lock);
   members.erase(user);
   
 }

@@ -94,12 +94,13 @@ void chat_with_receiver(Client& client, Message& msg) {
     msg.data = "Error: not able to join room";
     client.conn->send(msg);
     return;
-  }
+  } //?? do we need to check with get_last_result??
+
   // if good, send ok
   Message ok_msg = Message(TAG_OK, "joined");
   client.conn->send(ok_msg);
 
-  User * user = new User(msg.data); // make dynam-alloc user with username
+  User *user = new User(msg.data); // make dynam-alloc user with username
 
   // register receiver to room. after getting join msg, get room number
   string room_name = msg.format_data().at(0);
