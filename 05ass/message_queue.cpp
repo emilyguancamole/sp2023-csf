@@ -1,5 +1,6 @@
 #include <cassert>
 #include <ctime>
+#include "guard.h"
 #include "message_queue.h"
 
 MessageQueue::MessageQueue() {
@@ -20,6 +21,7 @@ void MessageQueue::enqueue(Message *msg) {
   // available by calling sem_post
 
   //?? Need to guard for messages...??
+  Guard guard(m_lock);
   m_messages.push_back(msg);
   sem_post(&m_avail);
 }
@@ -38,9 +40,12 @@ Message *MessageQueue::dequeue() {
 
   // call sem_timedwait to wait up to 1 second for a message
   //       to be available, return nullptr if no message is available
+  // never release the guard so we can't enqueue if we lock here, so lock after
   if (sem_timedwait(&m_avail, &ts) < 0) { //?
     return nullptr;
   }
+
+  Guard guard(m_lock);
 
   // remove the next message from the queue, return it
   Message *msg = nullptr;

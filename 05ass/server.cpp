@@ -36,7 +36,7 @@ namespace {
 
 
 void chat_with_receiver(Client& client, Message& msg);
-void chat_with_sender(Message& msg);
+void chat_with_sender(Client& client, Message& msg);
 
 void *worker(void *arg) { // entry point for new thread being created
   // thread is already created
@@ -50,7 +50,13 @@ void *worker(void *arg) { // entry point for new thread being created
   // TODO: read login message (should be tagged either with TAG_SLOGIN or TAG_RLOGIN), 
   //       send response
   Message login_msg;
-  client->conn->receive(login_msg); // call receive function, store message in login_msg
+  if (!client->conn->receive(login_msg)) {
+    login_msg.tag = TAG_ERR;
+    login_msg.data = "Error: failed to receive login message";
+    client->conn->send(login_msg);
+    return nullptr;
+  }; // call receive function, store message in login_msg
+  
   if (login_msg.tag != TAG_SLOGIN || login_msg.tag != TAG_RLOGIN) {
     // send a error msg back with tag error
     login_msg.tag = TAG_ERR;
@@ -62,7 +68,7 @@ void *worker(void *arg) { // entry point for new thread being created
   Message ok_msg = Message(TAG_OK, "logged in");
   if (!client->conn->send(ok_msg)) {
     login_msg.tag = TAG_ERR;
-    login_msg.data = "Error: login message has wrong tag";
+    login_msg.data = "Error: failed to send message";
     client->conn->send(login_msg);
   }
 
@@ -73,7 +79,7 @@ void *worker(void *arg) { // entry point for new thread being created
   if (login_msg.tag == TAG_RLOGIN) { // receiver
     chat_with_receiver(*client, join_msg);
   } else if (login_msg.tag == TAG_SLOGIN) { // receiver
-    chat_with_sender(join_msg);
+    chat_with_sender(*client, join_msg);
   }
 
   // free everything in client
@@ -95,6 +101,7 @@ void chat_with_receiver(Client& client, Message& msg) {
     client.conn->send(msg);
     return;
   } //?? do we need to check with get_last_result??
+  // Need to check message length again...????
 
   // if good, send ok
   Message ok_msg = Message(TAG_OK, "joined");
@@ -115,6 +122,7 @@ void chat_with_receiver(Client& client, Message& msg) {
       go = false; // break out of while loop if failed to send
       //continue;
     }
+    delete mq;
   }
 
   // delete remaining messages on the queue
@@ -124,7 +132,43 @@ void chat_with_receiver(Client& client, Message& msg) {
   delete user;
 }
 
-void chat_with_sender(Message& msg) {
+void chat_with_sender(Client& client, Message& msg) {
+  Room *sender_room = NULL;
+
+  bool quitted = false;
+  while(!quitted) { //?? need to check if we received message from the user??    
+    if (msg.tag == TAG_JOIN) {
+      sender_room = client.server->find_or_create_room(msg.data);
+      msg.tag = TAG_OK;
+      msg.data = "join";
+      client.conn->send(msg);
+    } else if (sender_room == NULL) {
+      msg.tag = TAG_ERR;
+      msg.data = "Error: failed to join room";
+      client.conn->send(msg);
+      continue;
+    } else if (msg.tag == TAG_SENDALL) {
+      sender_room->broadcast_message(msg.format_data().at(1), msg.format_data().at(2));
+      msg.tag = TAG_OK;
+      msg.data = "ok";
+      client.conn->send(msg);
+    } else if (msg.tag == TAG_LEAVE) {
+      sender_room = NULL;
+      msg.tag = TAG_OK;
+      msg.data = "leave";
+      client.conn->send(msg);
+      continue;
+    } else if (msg.data == TAG_QUIT) {
+      msg.tag = TAG_OK;
+      msg.data = "bye";
+      client.conn->send(msg);
+      quitted = true;
+    } else {
+      msg.tag = TAG_ERR;
+      msg.data = "Error: invalid message tag";
+      client.conn->send(msg);
+    }
+  }
 }
 
 }
