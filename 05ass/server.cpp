@@ -127,10 +127,12 @@ void *worker(void *arg) { // entry point for new thread being created
   //       send response
   Message login_msg;
   if (!client->conn->receive(login_msg)) {
-    login_msg.tag = TAG_ERR;
-    login_msg.data = "Error: failed to receive login message";
-    client->conn->send(login_msg);
-    return nullptr;
+    if (client->conn->get_last_result() == Connection::EOF_OR_ERROR) {
+      login_msg.tag = TAG_ERR;
+      login_msg.data = "Error: failed to receive login message";
+      client->conn->send(login_msg);
+      return nullptr;
+    }
   }; // call receive function, store message in login_msg
   
   if (login_msg.tag != TAG_SLOGIN || login_msg.tag != TAG_RLOGIN) {
@@ -146,6 +148,7 @@ void *worker(void *arg) { // entry point for new thread being created
     login_msg.tag = TAG_ERR;
     login_msg.data = "Error: failed to send message";
     client->conn->send(login_msg);
+    return nullptr;
   }
 
   // TODO: depending on whether the client logged in as a sender or
