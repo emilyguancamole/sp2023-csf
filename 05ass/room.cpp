@@ -25,8 +25,8 @@ Room::~Room() {
 
 void Room::add_member(User *user) {
   // check if user is in the room before adding
+  Guard guard(lock); // lock before reading count
   if (members.count(user) == 0) {
-    Guard guard(lock);
     members.insert(user);
   }
 }
@@ -49,14 +49,6 @@ void Room::broadcast_message(const std::string &sender_username, const std::stri
     Message* b_message = new Message(TAG_DELIVERY, message);
     (curr_user->mqueue).enqueue(b_message);
   }
-
-  /*
-  for (User* user : members) {
-    Message* b_message = new Message(TAG_DELIVERY, message);
-    std::cout << message << std::endl;
-    user->mqueue.enqueue(b_message);
-  }
-  */
 }
 
 int Room::get_room_size() { return members.size(); }

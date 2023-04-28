@@ -21,6 +21,8 @@ struct Message {
   Message(const std::string &tag, const std::string &data)
     : tag(tag), data(data) { }
 
+  //? need destructor??
+
   vector<string> format_data() { // split message string formatted as room:sender:message
     vector<string> formatted_data;
     size_t colon = data.find(':');

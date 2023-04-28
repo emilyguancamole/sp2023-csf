@@ -2,6 +2,7 @@
 #include <ctime>
 #include <pthread.h>
 #include "guard.h"
+#include "message.h"
 #include "message_queue.h"
 
 MessageQueue::MessageQueue() {
@@ -12,8 +13,24 @@ MessageQueue::MessageQueue() {
 
 MessageQueue::~MessageQueue() {
   // TODO: destroy the mutex and the semaphore
+  clear_queue();
   sem_destroy(&m_avail);
   pthread_mutex_destroy(&m_lock);
+  
+}
+
+void MessageQueue::clear_queue() {
+  pthread_mutex_lock(&m_lock); // lock mutex
+  while(m_messages.size() != 0) {
+    Message* msg = m_messages.front();
+    m_messages.pop_front();
+    delete msg;
+  }
+  // for (Message* msg : m_messages) {
+  //   delete msg;
+  //   m_messages.pop_front();
+  // }
+  pthread_mutex_unlock(&m_lock);
 }
 
 void MessageQueue::enqueue(Message *msg) {
