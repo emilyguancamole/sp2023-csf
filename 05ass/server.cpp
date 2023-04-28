@@ -26,6 +26,8 @@ using std::cerr;
 struct Client {
   Server* server;
   Connection* conn;
+
+  // destructor - delete conn
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,7 @@ void *worker(void *arg) { // entry point for new thread being created
 
   // free everything in client
   delete client->conn;
-  delete client->server;
+  //delete client->server;
   delete client;
 
   return nullptr;
@@ -115,7 +117,7 @@ void chat_with_receiver(Client& client, Message& msg) {
   room->add_member(user); // only add receivers as member to room
 
   // start receiving msgs in a loop, within that room
-  bool go;
+  bool go = true;
   while (go) {
     Message* mq = (user->mqueue).dequeue(); // dequeue next message to be sent //??can we use same msg here
     if(!client.conn->send(*mq)) {
@@ -126,7 +128,7 @@ void chat_with_receiver(Client& client, Message& msg) {
   }
 
   // delete remaining messages on the queue
-  user->mqueue.clear_queue(); // if this breaks things, delete it
+  // user->mqueue.clear_queue(); // if this breaks things, delete it
   
   room->remove_member(user); // frees the user
   delete user;
@@ -146,7 +148,6 @@ void chat_with_sender(Client& client, Message& msg) {
       msg.tag = TAG_ERR;
       msg.data = "Error: failed to join room";
       client.conn->send(msg);
-      continue;
     } else if (msg.tag == TAG_SENDALL) {
       sender_room->broadcast_message(msg.format_data().at(1), msg.format_data().at(2));
       msg.tag = TAG_OK;
@@ -157,7 +158,6 @@ void chat_with_sender(Client& client, Message& msg) {
       msg.tag = TAG_OK;
       msg.data = "leave";
       client.conn->send(msg);
-      continue;
     } else if (msg.data == TAG_QUIT) {
       msg.tag = TAG_OK;
       msg.data = "bye";
@@ -210,7 +210,7 @@ void Server::handle_client_requests() {
   while(true) {
     int clientfd = accept(m_ssock, NULL, NULL); // fd for the connection to client
     if (clientfd < 0) {
-      //cerr << "Error accepting client connection";
+      cerr << "Error accepting client connection";
       continue;
     }
 

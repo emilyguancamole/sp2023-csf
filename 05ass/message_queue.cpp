@@ -1,5 +1,6 @@
 #include <cassert>
 #include <ctime>
+#include <pthread.h>
 #include "guard.h"
 #include "message_queue.h"
 
@@ -20,9 +21,9 @@ void MessageQueue::enqueue(Message *msg) {
   // be sure to notify any thread waiting for a message to be
   // available by calling sem_post
 
-  //?? Need to guard for messages...??
-  Guard guard(m_lock);
+  pthread_mutex_lock(&m_lock); // lock mutex
   m_messages.push_back(msg);
+  pthread_mutex_unlock(&m_lock); // unlock after adding message
   sem_post(&m_avail);
 }
 
@@ -45,12 +46,13 @@ Message *MessageQueue::dequeue() {
     return nullptr;
   }
 
-  Guard guard(m_lock);
+  pthread_mutex_lock(&m_lock);
 
   // remove the next message from the queue, return it
   Message *msg = nullptr;
   msg = m_messages.front();
   m_messages.pop_front();
+  pthread_mutex_unlock(&m_lock);
   return msg;
 }
 
