@@ -55,10 +55,3 @@ Message *MessageQueue::dequeue() {
   pthread_mutex_unlock(&m_lock);
   return msg;
 }
-
-// added helper to get clear queue
-void MessageQueue::clear_queue() {
-  while (!m_messages.empty()) {
-    m_messages.pop_front();
-  }
-}

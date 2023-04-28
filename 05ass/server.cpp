@@ -35,10 +35,84 @@ struct Client {
 ////////////////////////////////////////////////////////////////////////
 
 namespace {
+// helper function when client logged in as receiver
+void chat_with_receiver(Client& client, string& username) {
+  // register receiver thread with username //?? where does username come up
+  Message join_msg;
+  // determine tag of message to check if it's join (what we're expecting). if not, output error: ""Error: message not received";
+  if (!client.conn->receive(join_msg) || join_msg.tag != TAG_JOIN) {
+    join_msg.tag = TAG_ERR;
+    join_msg.data = "Error: not able to join room";
+    client.conn->send(join_msg);
+    return;
+  } 
 
+  // if good, send ok
+  Message ok_msg = Message(TAG_OK, "joined");
+  client.conn->send(ok_msg);
 
-void chat_with_receiver(Client& client, Message& msg);
-void chat_with_sender(Client& client, Message& msg);
+  User *user = new User(username); // make dynam-alloc user with username
+
+  // register receiver to room. after getting join msg, get room number
+  string room_name = join_msg.format_data().at(0);
+  Room* room = client.server->find_or_create_room(room_name); 
+  room->add_member(user); // only add receivers as member to room
+
+  // start receiving msgs in a loop, within that room
+  bool go = true;
+  while (go) {
+    Message* mq = (user->mqueue).dequeue(); // dequeue next message to be sent //??can we use same msg here
+    if(!client.conn->send(*mq)) {
+      go = false; // break out of while loop if failed to send
+      //continue;
+    }
+    delete mq;
+  }
+
+  // delete remaining messages on the queue
+  // user->mqueue.clear_queue(); // if this breaks things, delete it
+  
+  room->remove_member(user); // frees the user
+  delete user;
+}
+
+void chat_with_sender(Client& client, string& username) {
+  Room *sender_room = NULL;
+
+  bool quitted = false;
+  while(!quitted) { //?? need to check if we received message from the user??    
+    Message msg;
+    if (msg.tag == TAG_JOIN) {
+      sender_room = client.server->find_or_create_room(msg.data);
+      msg.tag = TAG_OK;
+      msg.data = "join";
+      client.conn->send(msg);
+    } else if (sender_room == NULL) {
+      msg.tag = TAG_ERR;
+      msg.data = "Error: failed to join room";
+      client.conn->send(msg);
+    } else if (msg.tag == TAG_SENDALL) {
+      sender_room->broadcast_message(msg.format_data().at(1), msg.format_data().at(2));
+      msg.tag = TAG_OK;
+      msg.data = "ok";
+      client.conn->send(msg);
+    } else if (msg.tag == TAG_LEAVE) {
+      sender_room = NULL;
+      msg.tag = TAG_OK;
+      msg.data = "leave";
+      client.conn->send(msg);
+    } else if (msg.data == TAG_QUIT) {
+      msg.tag = TAG_OK;
+      msg.data = "bye";
+      client.conn->send(msg);
+      quitted = true;
+    } else {
+      msg.tag = TAG_ERR;
+      msg.data = "Error: invalid message tag";
+      client.conn->send(msg);
+    }
+  }
+}
 
 void *worker(void *arg) { // entry point for new thread being created
   // thread is already created
@@ -77,11 +151,11 @@ void *worker(void *arg) { // entry point for new thread being created
   // TODO: depending on whether the client logged in as a sender or
   //       receiver, communicate with the client (implementing
   //       separate helper functions for each of these possibilities is a good idea)
-  Message join_msg;
+  // Message join_msg;
   if (login_msg.tag == TAG_RLOGIN) { // receiver
-    chat_with_receiver(*client, join_msg);
+    chat_with_receiver(*client, login_msg.data);
   } else if (login_msg.tag == TAG_SLOGIN) { // receiver
-    chat_with_sender(*client, join_msg);
+    chat_with_sender(*client, login_msg.data);
   }
 
   // free everything in client
@@ -90,85 +164,6 @@ void *worker(void *arg) { // entry point for new thread being created
   delete client;
 
   return nullptr;
-}
-
-// helper function when client logged in as receiver
-void chat_with_receiver(Client& client, Message& msg) {
-  // register receiver thread with username //?? where does username come up
-
-  // determine tag of message to check if it's join (what we're expecting). if not, output error: ""Error: message not received";
-  if (!client.conn->receive(msg) || msg.tag != TAG_JOIN) {
-    msg.tag = TAG_ERR;
-    msg.data = "Error: not able to join room";
-    client.conn->send(msg);
-    return;
-  } //?? do we need to check with get_last_result??
-  // Need to check message length again...????
-
-  // if good, send ok
-  Message ok_msg = Message(TAG_OK, "joined");
-  client.conn->send(ok_msg);
-
-  User *user = new User(msg.data); // make dynam-alloc user with username
-
-  // register receiver to room. after getting join msg, get room number
-  string room_name = msg.format_data().at(0);
-  Room* room = client.server->find_or_create_room(room_name); 
-  room->add_member(user); // only add receivers as member to room
-
-  // start receiving msgs in a loop, within that room
-  bool go = true;
-  while (go) {
-    Message* mq = (user->mqueue).dequeue(); // dequeue next message to be sent //??can we use same msg here
-    if(!client.conn->send(*mq)) {
-      go = false; // break out of while loop if failed to send
-      //continue;
-    }
-    delete mq;
-  }
-
-  // delete remaining messages on the queue
-  // user->mqueue.clear_queue(); // if this breaks things, delete it
-  
-  room->remove_member(user); // frees the user
-  delete user;
-}
-
-void chat_with_sender(Client& client, Message& msg) {
-  Room *sender_room = NULL;
-
-  bool quitted = false;
-  while(!quitted) { //?? need to check if we received message from the user??    
-    if (msg.tag == TAG_JOIN) {
-      sender_room = client.server->find_or_create_room(msg.data);
-      msg.tag = TAG_OK;
-      msg.data = "join";
-      client.conn->send(msg);
-    } else if (sender_room == NULL) {
-      msg.tag = TAG_ERR;
-      msg.data = "Error: failed to join room";
-      client.conn->send(msg);
-    } else if (msg.tag == TAG_SENDALL) {
-      sender_room->broadcast_message(msg.format_data().at(1), msg.format_data().at(2));
-      msg.tag = TAG_OK;
-      msg.data = "ok";
-      client.conn->send(msg);
-    } else if (msg.tag == TAG_LEAVE) {
-      sender_room = NULL;
-      msg.tag = TAG_OK;
-      msg.data = "leave";
-      client.conn->send(msg);
-    } else if (msg.data == TAG_QUIT) {
-      msg.tag = TAG_OK;
-      msg.data = "bye";
-      client.conn->send(msg);
-      quitted = true;
-    } else {
-      msg.tag = TAG_ERR;
-      msg.data = "Error: invalid message tag";
-      client.conn->send(msg);
-    }
-  }
 }
 
 }
