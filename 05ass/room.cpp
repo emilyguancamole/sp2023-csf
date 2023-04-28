@@ -43,7 +43,7 @@ void Room::broadcast_message(const std::string &sender_username, const std::stri
   Guard guard(lock); // ta: guard entire broadcast function
   string message = rtrim(room_name) + ":" + rtrim(sender_username) + ":" + rtrim(message_text);
   std::set<User*>::iterator it;
-  std::cout << "num elements in members: " << members.size() << std::endl;
+  //std::cout << "num elements in members: " << members.size() << std::endl;
   for (it = members.begin(); it != members.end(); it++) {
     User* curr_user = *it;
     Message* b_message = new Message(TAG_DELIVERY, message);

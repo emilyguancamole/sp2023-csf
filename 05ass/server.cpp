@@ -52,7 +52,6 @@ void chat_with_receiver(Client& client, string& username) {
   // register receiver to room. after getting join msg, get room number
   string room_name = join_msg.data;
   Room* room = client.server->find_or_create_room(room_name);
-  //std::cout << "ROOM NAME ROOM " << room->get_room_name() << std::endl;
   room->add_member(user); // only add receivers as member to room
 
     // if good, send ok
@@ -65,7 +64,6 @@ void chat_with_receiver(Client& client, string& username) {
   bool go = true;
   while (go) {
     Message* mq = (user->mqueue).dequeue(); // dequeue next message to receive
-    //std::cout << "msg.data !! " << mq->data << std::endl;
     if(mq != nullptr) {
       if(!client.conn->send(*mq)) { // sends the sendall message
         go = false; // break out of while loop if failed to send
@@ -92,7 +90,6 @@ void chat_with_sender(Client& client, string& username) {
     if (client.conn->receive(msg)) {
       if (msg.tag == TAG_JOIN) {
         sender_room = client.server->find_or_create_room(msg.data);
-        std::cout << "SENDER ROOM NAME " << sender_room->get_room_name() << std::endl;
         if (sender_room == NULL) {
           msg.tag = TAG_ERR;
           msg.data = "failed to join room";
@@ -114,7 +111,6 @@ void chat_with_sender(Client& client, string& username) {
           client.conn->send(Message(TAG_ERR, "not in the room"));
         }
       } else if (msg.tag == TAG_QUIT) {
-        std::cout << "quittedddd" << std::endl;
         quitted = true;
         client.conn->send(Message(TAG_OK, "bye"));
       } else {
