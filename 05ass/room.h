@@ -21,7 +21,8 @@ public:
   void remove_member(User *user);
 
   void broadcast_message(const std::string &sender_username, const std::string &message_text);
-
+  
+  int get_room_size();
 private:
   std::string room_name;
   pthread_mutex_t lock;

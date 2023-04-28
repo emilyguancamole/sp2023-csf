@@ -50,9 +50,8 @@ void chat_with_receiver(Client& client, string& username) {
   User *user = new User(username); // make dynam-alloc user with username
   // register receiver to room. after getting join msg, get room number
   string room_name = join_msg.data;
-  std::cout << "ROOM Name" << room_name << std::endl;
   Room* room = client.server->find_or_create_room(room_name);
-  std::cout << "ROOM NAME ROOM " << room->get_room_name() << std::endl;
+  //std::cout << "ROOM NAME ROOM " << room->get_room_name() << std::endl;
   room->add_member(user); // only add receivers as member to roomn //!
 
     // if good, send ok
@@ -64,16 +63,15 @@ void chat_with_receiver(Client& client, string& username) {
   // start receiving msgs in a loop, within that room
   bool go = true;
   while (go) {
-    Message* mq = (user->mqueue).dequeue(); // dequeue next message to receive //??can we use same msg here
-    //std::cout << "msg.data in SEND !! " << mq->data << std::endl;
-    if(mq == nullptr) {
-      go = false;
-      continue;
+    Message* mq = (user->mqueue).dequeue(); // dequeue next message to receive
+    //std::cout << "msg.data !! " << mq->data << std::endl;
+    if(mq != nullptr) {
+      if(!client.conn->send(*mq)) { // sends the sendall message
+        go = false; // break out of while loop if failed to send
+        //continue;
+      }
     }
-    if(!client.conn->send(*mq)) { // sends the sendall message
-      go = false; // break out of while loop if failed to send
-      //continue;
-    }
+    
     delete mq;
   }
 
@@ -96,27 +94,31 @@ void chat_with_sender(Client& client, string& username) {
         std::cout << "SENDER ROOM NAME " << sender_room->get_room_name() << std::endl;
         if (sender_room == NULL) {
           msg.tag = TAG_ERR;
-          msg.data = "Error: failed to join room";
+          msg.data = "failed to join room";
           client.conn->send(msg);
         } 
         client.conn->send(Message(TAG_OK, "welcome"));
       } else if (msg.tag == TAG_SENDALL) {
+        std::cout << "num users before broadcast: " << sender_room->get_room_size() << std::endl; //! this is 0
         sender_room->broadcast_message(username, msg.data);
+        std::cout << "num users after broadcast: " << sender_room->get_room_size() << std::endl;
         msg.tag = TAG_OK;
-        msg.data = "ok";
+        msg.data = "message sent";
         client.conn->send(msg);
       } else if (msg.tag == TAG_LEAVE) {
-        sender_room = NULL;
-        msg.tag = TAG_OK;
-        msg.data = "leave";
-        client.conn->send(msg);
+        if (sender_room != NULL && sender_room->get_room_name() == msg.data) { // only leave if already in the same room
+          sender_room = NULL;
+          client.conn->send(Message(TAG_OK, "leave"));
+        } else {
+          client.conn->send(Message(TAG_ERR, "not in the room"));
+        }
       } else if (msg.data == TAG_QUIT) {
         msg.tag = TAG_OK;
         msg.data = "bye";
         client.conn->send(msg);
         quitted = true;
       } else {
-        if (client.conn->get_last_result() == Connection::EOF_OR_ERROR) {
+        if (client.conn->get_last_result() == Connection::INVALID_MSG) { //? EOF_OR_ERROR?
           msg.tag = TAG_ERR;
           msg.data = "Error: invalid message tag";
           client.conn->send(msg);

@@ -40,13 +40,13 @@ void Room::remove_member(User *user) {
 
 void Room::broadcast_message(const std::string &sender_username, const std::string &message_text) {
   // TODO: send a message to every (receiver) User in the room
+  Guard guard(lock); // ????guard bc manipulating message queue
   string message = rtrim(room_name) + ":" + rtrim(sender_username) + ":" + rtrim(message_text);
   std::set<User*>::iterator it;
   std::cout << "num elements in members: " << members.size() << std::endl;
   for (it = members.begin(); it != members.end(); it++) {
     User* curr_user = *it;
     Message* b_message = new Message(TAG_DELIVERY, message);
-    //Guard guard(lock); // ????guard bc manipulating message queue
     (curr_user->mqueue).enqueue(b_message);
   }
 
@@ -58,3 +58,5 @@ void Room::broadcast_message(const std::string &sender_username, const std::stri
   }
   */
 }
+
+int Room::get_room_size() { return members.size(); }
