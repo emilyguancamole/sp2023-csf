@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <pthread.h>
 #include <iostream>
 #include <sstream>
@@ -52,7 +53,7 @@ void chat_with_receiver(Client& client, string& username) {
   string room_name = join_msg.data;
   Room* room = client.server->find_or_create_room(room_name);
   //std::cout << "ROOM NAME ROOM " << room->get_room_name() << std::endl;
-  room->add_member(user); // only add receivers as member to roomn //!
+  room->add_member(user); // only add receivers as member to room
 
     // if good, send ok
   Message ok_msg = Message(TAG_OK, "welcome");
@@ -88,7 +89,7 @@ void chat_with_sender(Client& client, string& username) {
   bool quitted = false;
   while(!quitted) { //?? need to check if we received message from the user??    
     Message msg;
-    if (client.conn->receive(msg)) { //? th
+    if (client.conn->receive(msg)) {
       if (msg.tag == TAG_JOIN) {
         sender_room = client.server->find_or_create_room(msg.data);
         std::cout << "SENDER ROOM NAME " << sender_room->get_room_name() << std::endl;
@@ -99,26 +100,25 @@ void chat_with_sender(Client& client, string& username) {
         } 
         client.conn->send(Message(TAG_OK, "welcome"));
       } else if (msg.tag == TAG_SENDALL) {
-        std::cout << "num users before broadcast: " << sender_room->get_room_size() << std::endl; //! this is 0
-        sender_room->broadcast_message(username, msg.data);
-        std::cout << "num users after broadcast: " << sender_room->get_room_size() << std::endl;
-        msg.tag = TAG_OK;
-        msg.data = "message sent";
-        client.conn->send(msg);
+        if (sender_room != NULL) { // make sure in a room before sending
+          sender_room->broadcast_message(username, msg.data);
+          client.conn->send(Message(TAG_OK, "message sent"));
+        } else {
+          client.conn->send(Message(TAG_ERR, "not in a room"));
+        }
       } else if (msg.tag == TAG_LEAVE) {
         if (sender_room != NULL && sender_room->get_room_name() == msg.data) { // only leave if already in the same room
           sender_room = NULL;
-          client.conn->send(Message(TAG_OK, "leave"));
+          client.conn->send(Message(TAG_OK, "left room"));
         } else {
           client.conn->send(Message(TAG_ERR, "not in the room"));
         }
-      } else if (msg.data == TAG_QUIT) {
-        msg.tag = TAG_OK;
-        msg.data = "bye";
-        client.conn->send(msg);
+      } else if (msg.tag == TAG_QUIT) {
+        std::cout << "quittedddd" << std::endl;
         quitted = true;
+        client.conn->send(Message(TAG_OK, "bye"));
       } else {
-        if (client.conn->get_last_result() == Connection::INVALID_MSG) { //? EOF_OR_ERROR?
+        if (client.conn->get_last_result() == Connection::INVALID_MSG) { //? or EOF_OR_ERROR?
           msg.tag = TAG_ERR;
           msg.data = "Error: invalid message tag";
           client.conn->send(msg);
