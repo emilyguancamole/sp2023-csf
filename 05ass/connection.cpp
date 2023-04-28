@@ -80,7 +80,7 @@ bool Connection::send(const Message &msg) {
   }
 
   // FORMAT the message into string, convert to cstring - to be displayed
-  string msgstr = msg.tag + ":" + msg.data + "\n"; 
+  string msgstr = msg.tag + ":" + msg.data + "\n";  //!! wanna display
   
   const char* msg_cstr = msgstr.c_str();
   ssize_t msg_size = strlen(msg_cstr);

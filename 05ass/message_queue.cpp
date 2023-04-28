@@ -42,7 +42,7 @@ Message *MessageQueue::dequeue() {
   // call sem_timedwait to wait up to 1 second for a message
   //       to be available, return nullptr if no message is available
   // never release the guard so we can't enqueue if we lock here, so lock after
-  if (sem_timedwait(&m_avail, &ts) < 0) { //?
+  if (sem_timedwait(&m_avail, &ts) != 0) { // returns 0 if successful
     return nullptr;
   }
 

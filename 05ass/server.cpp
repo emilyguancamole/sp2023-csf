@@ -47,22 +47,30 @@ void chat_with_receiver(Client& client, string& username) {
     return;
   } 
 
-  // if good, send ok
-  Message ok_msg = Message(TAG_OK, "joined");
-  client.conn->send(ok_msg);
-
   User *user = new User(username); // make dynam-alloc user with username
-
   // register receiver to room. after getting join msg, get room number
-  string room_name = join_msg.format_data().at(0);
-  Room* room = client.server->find_or_create_room(room_name); 
-  room->add_member(user); // only add receivers as member to room
+  string room_name = join_msg.data;
+  std::cout << "ROOM Name" << room_name << std::endl;
+  Room* room = client.server->find_or_create_room(room_name);
+  std::cout << "ROOM NAME ROOM " << room->get_room_name() << std::endl;
+  room->add_member(user); // only add receivers as member to roomn //!
+
+    // if good, send ok
+  Message ok_msg = Message(TAG_OK, "welcome");
+  if (!client.conn->send(ok_msg)) {
+    return;
+  }
 
   // start receiving msgs in a loop, within that room
   bool go = true;
   while (go) {
-    Message* mq = (user->mqueue).dequeue(); // dequeue next message to be sent //??can we use same msg here
-    if(!client.conn->send(*mq)) {
+    Message* mq = (user->mqueue).dequeue(); // dequeue next message to receive //??can we use same msg here
+    //std::cout << "msg.data in SEND !! " << mq->data << std::endl;
+    if(mq == nullptr) {
+      go = false;
+      continue;
+    }
+    if(!client.conn->send(*mq)) { // sends the sendall message
       go = false; // break out of while loop if failed to send
       //continue;
     }
@@ -82,34 +90,38 @@ void chat_with_sender(Client& client, string& username) {
   bool quitted = false;
   while(!quitted) { //?? need to check if we received message from the user??    
     Message msg;
-    if (msg.tag == TAG_JOIN) {
-      sender_room = client.server->find_or_create_room(msg.data);
-      msg.tag = TAG_OK;
-      msg.data = "join";
-      client.conn->send(msg);
-    } else if (sender_room == NULL) {
-      msg.tag = TAG_ERR;
-      msg.data = "Error: failed to join room";
-      client.conn->send(msg);
-    } else if (msg.tag == TAG_SENDALL) {
-      sender_room->broadcast_message(msg.format_data().at(1), msg.format_data().at(2));
-      msg.tag = TAG_OK;
-      msg.data = "ok";
-      client.conn->send(msg);
-    } else if (msg.tag == TAG_LEAVE) {
-      sender_room = NULL;
-      msg.tag = TAG_OK;
-      msg.data = "leave";
-      client.conn->send(msg);
-    } else if (msg.data == TAG_QUIT) {
-      msg.tag = TAG_OK;
-      msg.data = "bye";
-      client.conn->send(msg);
-      quitted = true;
-    } else {
-      msg.tag = TAG_ERR;
-      msg.data = "Error: invalid message tag";
-      client.conn->send(msg);
+    if (client.conn->receive(msg)) { //? th
+      if (msg.tag == TAG_JOIN) {
+        sender_room = client.server->find_or_create_room(msg.data);
+        std::cout << "SENDER ROOM NAME " << sender_room->get_room_name() << std::endl;
+        if (sender_room == NULL) {
+          msg.tag = TAG_ERR;
+          msg.data = "Error: failed to join room";
+          client.conn->send(msg);
+        } 
+        client.conn->send(Message(TAG_OK, "welcome"));
+      } else if (msg.tag == TAG_SENDALL) {
+        sender_room->broadcast_message(username, msg.data);
+        msg.tag = TAG_OK;
+        msg.data = "ok";
+        client.conn->send(msg);
+      } else if (msg.tag == TAG_LEAVE) {
+        sender_room = NULL;
+        msg.tag = TAG_OK;
+        msg.data = "leave";
+        client.conn->send(msg);
+      } else if (msg.data == TAG_QUIT) {
+        msg.tag = TAG_OK;
+        msg.data = "bye";
+        client.conn->send(msg);
+        quitted = true;
+      } else {
+        if (client.conn->get_last_result() == Connection::EOF_OR_ERROR) {
+          msg.tag = TAG_ERR;
+          msg.data = "Error: invalid message tag";
+          client.conn->send(msg);
+        }
+      }
     }
   }
 }
@@ -134,8 +146,7 @@ void *worker(void *arg) { // entry point for new thread being created
       return nullptr;
     }
   }; // call receive function, store message in login_msg
-  
-  if (login_msg.tag != TAG_SLOGIN || login_msg.tag != TAG_RLOGIN) {
+  if (login_msg.tag != TAG_SLOGIN && login_msg.tag != TAG_RLOGIN) {
     // send a error msg back with tag error
     login_msg.tag = TAG_ERR;
     login_msg.data = "Error: login message has wrong tag";
