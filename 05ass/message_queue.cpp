@@ -6,13 +6,13 @@
 #include "message_queue.h"
 
 MessageQueue::MessageQueue() {
-  // TODO: initialize the mutex and the semaphore
+  // initialize the mutex and the semaphore
   sem_init(&m_avail, 0, 0);
   pthread_mutex_init(&m_lock, NULL);
 }
 
 MessageQueue::~MessageQueue() {
-  // TODO: destroy the mutex and the semaphore
+  // destroy the mutex and the semaphore
   clear_queue();
   sem_destroy(&m_avail);
   pthread_mutex_destroy(&m_lock);
@@ -26,18 +26,11 @@ void MessageQueue::clear_queue() {
     m_messages.pop_front();
     delete msg;
   }
-  // for (Message* msg : m_messages) {
-  //   delete msg;
-  //   m_messages.pop_front();
-  // }
   pthread_mutex_unlock(&m_lock);
 }
 
 void MessageQueue::enqueue(Message *msg) {
-  // TODO: put the specified message on the queue
-  // be sure to notify any thread waiting for a message to be
-  // available by calling sem_post
-
+  // put the specified message on the queue
   pthread_mutex_lock(&m_lock); // lock mutex
   m_messages.push_back(msg);
   pthread_mutex_unlock(&m_lock); // unlock after adding message
@@ -49,8 +42,7 @@ Message *MessageQueue::dequeue() {
 
   // get the current time using clock_gettime:
   // we don't check the return value because the only reason
-  // this call would fail is if we specify a clock that doesn't
-  // exist
+  // this call would fail is if we specify a clock that doesn't exist
   clock_gettime(CLOCK_REALTIME, &ts);
 
   // compute a time one second in the future

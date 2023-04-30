@@ -24,8 +24,7 @@ private:
 
   typedef std::map<std::string, Room *> RoomMap;
 
-  // These member variables are sufficient for implementing
-  // the server operations
+  // These member variables are sufficient for implementing the server operations
   int m_port;
   int m_ssock;
   RoomMap m_rooms;

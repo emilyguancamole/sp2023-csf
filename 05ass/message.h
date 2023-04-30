@@ -20,10 +20,9 @@ struct Message {
 
   Message(const std::string &tag, const std::string &data)
     : tag(tag), data(data) { }
-
-  //? need destructor??
-
-  vector<string> format_data() { // split message string formatted as room:sender:message
+  
+  // split message string formatted as room:sender:message
+  vector<string> format_data() { 
     vector<string> formatted_data;
     size_t colon = data.find(':');
     while (colon != string::npos) {
@@ -32,7 +31,6 @@ struct Message {
       colon = data.find(':');
     }
     formatted_data.push_back(data);
-    
     return formatted_data;
   }
   

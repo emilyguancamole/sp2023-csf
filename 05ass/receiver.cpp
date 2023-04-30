@@ -26,7 +26,7 @@ bool chatloop(Connection &conn, Message &msg, string room) {
       cerr << "Error: invalid message format" << endl;
       return false;
     }
-    cout << in_msg[1] << ": " << in_msg[2]; //!! print sender and message
+    cout << in_msg[1] << ": " << in_msg[2];
 
     // check to make sure if message's room matches
     if (in_msg[0] != room) {

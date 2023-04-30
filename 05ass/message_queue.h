@@ -24,7 +24,6 @@ private:
   // these data members are sufficient to implement the
   // enqueue and dequeue operations: the idea is that the semaphore
   // keeps a count of how many messages are currently in the queue
-
   pthread_mutex_t m_lock; // must be held while accessing queue
   sem_t m_avail;
   std::deque<Message *> m_messages;
